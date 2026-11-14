@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../core/date_format.dart';
+
 import 'package:provider/provider.dart';
 
 import '../core/money.dart';
@@ -139,9 +142,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
                     const SizedBox(height: 16),
                     OutlinedButton.icon(
                       icon: const Icon(Icons.calendar_today_outlined),
-                      label: Text(
-                        'Date: ${_date.toIso8601String().split('T').first}',
-                      ),
+                      label: Text('Date: ${formatUsDate(_date)}'),
                       onPressed: saving
                           ? null
                           : () async {
@@ -172,7 +173,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
                     if (widget.expense != null) ...[
                       const SizedBox(height: 12),
                       Text(
-                        'Saved: ${formatMinor(widget.expense!.amountUsdMinor, Currency.usd)} USD · rate date ${widget.expense!.rateDate.toIso8601String().split('T').first}',
+                        'Saved: ${formatMinor(widget.expense!.amountUsdMinor, Currency.usd)} USD · rate date ${formatUsDate(widget.expense!.rateDate)}',
                       ),
                     ],
                     if (_error != null) ...[

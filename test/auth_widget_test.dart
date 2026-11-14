@@ -63,6 +63,7 @@ void main() {
   ) async {
     final auth = FakeAuthService();
     final first = MemoryExpenseRepository();
+    final now = DateTime.now();
     first.expenses = [
       Expense(
         id: 'private-expense',
@@ -70,10 +71,10 @@ void main() {
         currency: Currency.usd,
         amountUsdMinor: 100,
         exchangeRate: 1,
-        rateDate: DateTime(2026),
+        rateDate: now,
         category: 'Food',
         description: 'Private purchase',
-        date: DateTime(2026),
+        date: now,
       ),
     ];
     final second = MemoryExpenseRepository();
@@ -88,7 +89,7 @@ void main() {
     await tester.tap(find.text('Expenses'));
     await tester.pumpAndSettle();
     expect(find.text('Private purchase'), findsOneWidget);
-    await tester.tap(find.text('Add expense'));
+    await tester.tap(find.byTooltip('Add expense'));
     await tester.pumpAndSettle();
     expect(find.text('Expense amount'), findsOneWidget);
     auth.emit(null);

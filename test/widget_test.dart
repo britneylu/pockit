@@ -53,7 +53,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Expenses'));
     await tester.pumpAndSettle();
-    expect(find.text('Every purchase, in perspective.'), findsOneWidget);
+    expect(find.byTooltip('Add expense'), findsOneWidget);
     await tester.tap(find.text('Settings'));
     await tester.pumpAndSettle();
     expect(find.text('Make room for your goals.'), findsOneWidget);
@@ -90,7 +90,7 @@ void main() {
     await tester.tap(find.text('Retry'));
     await tester.pumpAndSettle();
     expect(find.text('Retry'), findsNothing);
-    expect(find.text('Rate date: 2026-11-04'), findsOneWidget);
+    expect(find.text('Rate date: 11/04/2026'), findsOneWidget);
   });
 
   testWidgets('small screen and large text remain scrollable', (tester) async {

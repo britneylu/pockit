@@ -7,6 +7,7 @@ import '../viewmodels/dashboard_viewmodel.dart';
 import '../widgets/budget_progress.dart';
 import '../widgets/category_breakdown.dart';
 import '../widgets/monthly_expense_list.dart';
+import '../widgets/month_selector.dart';
 
 // show one month of spending without making extra database requests
 class HomeScreen extends StatelessWidget {
@@ -19,20 +20,6 @@ class HomeScreen extends StatelessWidget {
   final VoidCallback onExpenses;
   final VoidCallback onSettings;
   final VoidCallback onConvert;
-  static const _months = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
   String _money(int minor) => '${formatMinor(minor, Currency.usd)} USD';
 
   @override
@@ -83,36 +70,13 @@ class HomeScreen extends StatelessWidget {
         const SizedBox(height: 8),
         const Text('A little clarity for the month ahead.'),
         const SizedBox(height: 24),
-        Row(
-          children: [
-            IconButton(
-              onPressed: model.previousMonth,
-              tooltip: 'Previous month',
-              icon: const Icon(Icons.chevron_left),
-            ),
-            Expanded(
-              child: Semantics(
-                liveRegion: true,
-                child: Text(
-                  '${_months[state.month.month - 1]} ${state.month.year}',
-                  key: const Key('summaryMonth'),
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.titleLarge,
-                ),
-              ),
-            ),
-            IconButton(
-              onPressed: model.nextMonth,
-              tooltip: 'Next month',
-              icon: const Icon(Icons.chevron_right),
-            ),
-          ],
-        ),
-        Center(
-          child: TextButton(
-            onPressed: model.currentMonth,
-            child: const Text('This month'),
-          ),
+        MonthSelector(
+          month: state.month,
+          monthKey: const Key('summaryMonth'),
+          onPrevious: model.previousMonth,
+          onNext: model.nextMonth,
+          onCurrent: model.currentMonth,
+          onSelected: model.selectMonth,
         ),
         const SizedBox(height: 12),
         // keep spending and its budget context together in one compact card

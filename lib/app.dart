@@ -10,6 +10,7 @@ import 'views/converter_screen.dart';
 import 'views/home_screen.dart';
 import 'viewmodels/dashboard_viewmodel.dart';
 import 'views/expenses_screen.dart';
+import 'views/expense_form.dart';
 import 'repositories/expense_repository.dart';
 import 'repositories/firestore_expense_repository.dart';
 import 'viewmodels/guest_transfer_viewmodel.dart';
@@ -143,6 +144,23 @@ class _PockitShellState extends State<PockitShell> {
       label: 'Settings',
     ),
   ];
+  // leave the middle mobile slot for the global add action
+  static const _bottomDestinations = [
+    NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
+    NavigationDestination(
+      icon: Icon(Icons.receipt_long_outlined),
+      label: 'Expenses',
+    ),
+    NavigationDestination(icon: _AddNavigationIcon(), label: ''),
+    NavigationDestination(
+      icon: Icon(Icons.currency_exchange),
+      label: 'Convert',
+    ),
+    NavigationDestination(
+      icon: Icon(Icons.settings_outlined),
+      label: 'Settings',
+    ),
+  ];
   // change tabs and fetch the first converter rate when needed
   void _select(int value) {
     setState(() => _index = value);
@@ -150,6 +168,26 @@ class _PockitShellState extends State<PockitShell> {
     if (value == 2 && model.state.status == ConversionStatus.idle) {
       model.refresh();
     }
+  }
+
+  // open one shared form from any tab
+  void _addExpense() {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(builder: (_) => const ExpenseForm()),
+    );
+  }
+
+  // map four page indexes around the center add action
+  int get _bottomIndex => _index < 2 ? _index : _index + 1;
+
+  // open the form when the middle slot is selected
+  void _selectBottom(int value) {
+    if (value == 2) {
+      _addExpense();
+      return;
+    }
+    _select(value < 2 ? value : value - 1);
   }
 
   @override
@@ -242,6 +280,20 @@ class _PockitShellState extends State<PockitShell> {
                             selectedIndex: _index,
                             onDestinationSelected: _select,
                             labelType: NavigationRailLabelType.all,
+                            leading: Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: FloatingActionButton.small(
+                                onPressed: _addExpense,
+                                tooltip: 'Add expense',
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .primary,
+                                foregroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimary,
+                                child: const Icon(Icons.add),
+                              ),
+                            ),
                             destinations: _destinations
                                 .map(
                                   (d) => NavigationRailDestination(
@@ -262,12 +314,37 @@ class _PockitShellState extends State<PockitShell> {
           bottomNavigationBar: wide
               ? null
               : NavigationBar(
-                  selectedIndex: _index,
-                  onDestinationSelected: _select,
-                  destinations: _destinations,
+                  selectedIndex: _bottomIndex,
+                  onDestinationSelected: _selectBottom,
+                  destinations: _bottomDestinations,
                 ),
         );
       },
+    );
+  }
+}
+
+// align the add action with the other navigation icons
+class _AddNavigationIcon extends StatelessWidget {
+  const _AddNavigationIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: 'Add expense',
+      child: Transform.translate(
+        offset: const Offset(0, 8),
+        child: Material(
+          color: colors.primary,
+          elevation: 3,
+          borderRadius: BorderRadius.circular(14),
+          child: SizedBox.square(
+            dimension: 46,
+            child: Icon(Icons.add, size: 26, color: colors.onPrimary),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -30,7 +30,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Expenses'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Add expense'));
+      await tester.tap(find.byTooltip('Add expense'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextFormField).first, '15');
       await tester.enterText(find.byType(TextFormField).last, 'Guest lunch');

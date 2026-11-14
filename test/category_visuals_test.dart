@@ -5,7 +5,7 @@ import 'package:pockit/models/category_spending.dart';
 import 'package:pockit/models/currency.dart';
 import 'package:pockit/models/expense.dart';
 import 'package:pockit/widgets/category_breakdown.dart';
-import 'package:pockit/widgets/expense_card.dart';
+import 'package:pockit/widgets/expense_list_item.dart';
 
 void main() {
   test('every supported category has a distinct stable color', () {
@@ -43,7 +43,7 @@ void main() {
                       ),
                     ],
                   ),
-                  ExpenseCard(
+                  ExpenseListItem(
                     expense: Expense(
                       id: 'food',
                       amountMinor: 7500,
@@ -71,13 +71,13 @@ void main() {
         (dot.decoration as BoxDecoration).color,
         CategoryStyle.color('Food'),
       );
-      final card = tester.widget<Card>(
+      expect(
         find.descendant(
-          of: find.byType(ExpenseCard),
+          of: find.byType(ExpenseListItem),
           matching: find.byType(Card),
         ),
+        findsNothing,
       );
-      expect(card.color, isNull);
       final icon = tester.widget<Icon>(find.byIcon(Icons.restaurant_outlined));
       expect(icon.color, CategoryStyle.color('Food'));
     },

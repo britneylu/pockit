@@ -152,4 +152,78 @@ void main() {
       expect(repo.listeners, 0);
     },
   );
+  test('date groups combine purchase days and respect the category filter', () {
+    Expense expense(String id, DateTime date, String category) => Expense(
+      id: id,
+      amountMinor: 100,
+      currency: Currency.usd,
+      amountUsdMinor: 100,
+      exchangeRate: 1,
+      rateDate: date,
+      category: category,
+      description: id,
+      date: date,
+    );
+    final values = [
+      expense('older', DateTime(2026, 11, 13), 'Food'),
+      expense('morning', DateTime(2026, 11, 14, 8), 'Food'),
+      expense('evening', DateTime(2026, 11, 14, 20), 'Shopping'),
+    ];
+    final groups = ExpensesState(
+      expenses: values,
+      month: DateTime(2026, 11),
+    ).dateGroups;
+    expect(groups.map((group) => group.date), [
+      DateTime(2026, 11, 14),
+      DateTime(2026, 11, 13),
+    ]);
+    expect(groups.first.expenses.map((expense) => expense.id), [
+      'evening',
+      'morning',
+    ]);
+    expect(() => groups.first.expenses.clear(), throwsUnsupportedError);
+    final filtered = ExpensesState(
+      expenses: values,
+      month: DateTime(2026, 11),
+      filter: 'Shopping',
+    ).dateGroups;
+    expect(filtered.length, 1);
+    expect(filtered.single.expenses.single.id, 'evening');
+    expect(
+      ExpensesState(
+        expenses: values,
+        month: DateTime(2026, 11),
+        filter: 'Travel',
+      ).dateGroups,
+      isEmpty,
+    );
+  });
+
+  test('month navigation filters purchases without reloading them', () async {
+    final repo = MemoryExpenseRepository();
+    Expense expense(String id, DateTime date) => Expense(
+      id: id,
+      amountMinor: 100,
+      currency: Currency.usd,
+      amountUsdMinor: 100,
+      exchangeRate: 1,
+      rateDate: date,
+      category: 'Food',
+      description: id,
+      date: date,
+    );
+    final now = DateTime.now();
+    repo.expenses = [
+      expense('current', now),
+      expense('previous', DateTime(now.year, now.month - 1, 10)),
+    ];
+    final model = ExpensesViewModel(repo, RateService());
+    addTearDown(model.dispose);
+    await model.load();
+    expect(model.state.visible.single.id, 'current');
+    model.previousMonth();
+    expect(model.state.visible.single.id, 'previous');
+    model.nextMonth();
+    expect(model.state.visible.single.id, 'current');
+  });
 }

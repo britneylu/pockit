@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/date_format.dart';
+
 import '../core/category_style.dart';
 import '../core/money.dart';
 import '../models/currency.dart';
@@ -101,7 +103,7 @@ class MonthlyExpenseList extends StatelessWidget {
                       runSpacing: 4,
                       children: [
                         Text(
-                          '${expense.category} · ${expense.date.toIso8601String().split('T').first}',
+                          '${expense.category} · ${formatUsDate(expense.date)}',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: CategoryStyle.color(expense.category),
                           ),

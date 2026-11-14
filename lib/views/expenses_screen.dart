@@ -1,16 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/category_style.dart';
+import '../core/date_format.dart';
 import '../core/money.dart';
 import '../models/expense.dart';
 import '../viewmodels/expenses_viewmodel.dart';
-import '../viewmodels/auth_viewmodel.dart';
 import 'expense_form.dart';
-import '../widgets/expense_card.dart';
+import '../widgets/expense_list_item.dart';
+import '../widgets/month_selector.dart';
 
-// show filtered expenses with edit and delete actions
+// show purchases grouped by date with tap editing and swipe deletion
 class ExpensesScreen extends StatelessWidget {
   const ExpensesScreen({super.key});
+
+  // pair each category with its shared color and icon
+  Widget _categoryLabel(BuildContext context, String category) {
+    final all = category == 'All categories';
+    final color = all
+        ? Theme.of(context).colorScheme.onSurfaceVariant
+        : CategoryStyle.color(category);
+    return Row(
+      children: [
+        Icon(
+          all ? Icons.filter_list : CategoryStyle.icon(category),
+          size: 19,
+          color: color,
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(category, maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
+      ],
+    );
+  }
 
   // confirm deletion and offer an undo action after success
   Future<void> _delete(BuildContext context, Expense expense) async {
@@ -68,7 +91,6 @@ class ExpensesScreen extends StatelessWidget {
     final model = context.watch<ExpensesViewModel>();
     // read the current expense list and loading status
     final state = model.state;
-    final guest = context.watch<AuthViewModel>().state.account == null;
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
@@ -78,36 +100,42 @@ class ExpensesScreen extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         const Text('Original currency. One clear USD total.'),
-        const SizedBox(height: 16),
-        FilledButton.icon(
-          onPressed: state.loading || state.saving || state.error != null
-              ? null
-              : () => Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(builder: (_) => const ExpenseForm()),
-                ),
-          icon: const Icon(Icons.add),
-          label: const Text('Add expense'),
+        const SizedBox(height: 24),
+        MonthSelector(
+          month: state.month,
+          monthKey: const Key('expensesMonth'),
+          onPrevious: model.previousMonth,
+          onNext: model.nextMonth,
+          onCurrent: model.currentMonth,
+          onSelected: model.selectMonth,
         ),
-        const SizedBox(height: 16),
-        Text(
-          guest
-              ? 'Guest mode · expenses are temporary and disappear when you leave this session'
-              : 'Expenses sync with your signed-in account.',
-        ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
+        // keep the category menu compact and scrollable
         DropdownButtonFormField<String>(
           initialValue: state.filter ?? 'All categories',
-          decoration: const InputDecoration(labelText: 'Filter by category'),
-          items: [
-            'All categories',
-            ...expenseCategories,
-          ].map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+          isExpanded: true,
+          itemHeight: 52,
+          menuMaxHeight: 320,
+          borderRadius: BorderRadius.circular(16),
+          dropdownColor: Colors.white,
+          decoration: const InputDecoration(
+            labelText: 'Category',
+            isDense: true,
+            contentPadding: EdgeInsets.fromLTRB(14, 12, 12, 12),
+          ),
+          items: ['All categories', ...expenseCategories]
+              .map(
+                (category) => DropdownMenuItem(
+                  value: category,
+                  child: _categoryLabel(context, category),
+                ),
+              )
+              .toList(),
           onChanged: (value) =>
               model.setFilter(value == 'All categories' ? null : value),
         ),
         const SizedBox(height: 16),
-        // handle loading errors and empty results before showing cards
+        // handle loading errors and empty results before showing date groups
         if (state.loading)
           const LinearProgressIndicator()
         else if (state.error != null) ...[
@@ -122,44 +150,61 @@ class ExpensesScreen extends StatelessWidget {
             child: Text(
               state.expenses.isEmpty
                   ? 'No expenses yet. Add your first purchase to get started.'
+                  : state.monthly.isEmpty
+                  ? 'No expenses in this month.'
                   : 'No expenses in this category.',
             ),
           )
         else
-          ...state.visible.map(
-            // let users swipe an expense to request deletion
-            (expense) => Dismissible(
-              key: ValueKey(expense.id),
-              direction: state.saving
-                  ? DismissDirection.none
-                  : DismissDirection.endToStart,
-              background: Container(
-                alignment: Alignment.centerRight,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.errorContainer,
-                  borderRadius: BorderRadius.circular(22),
+          for (final group in state.dateGroups) ...[
+            Padding(
+              padding: const EdgeInsets.only(top: 18, bottom: 6),
+              child: Semantics(
+                header: true,
+                child: Text(
+                  formatUsDate(group.date),
+                  key: ValueKey('expenseDate-${formatUsDate(group.date)}'),
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
-                child: const Icon(Icons.delete_outline),
-              ),
-              confirmDismiss: (_) async {
-                await _delete(context, expense);
-                return false;
-              },
-              child: ExpenseCard(
-                expense: expense,
-                onEdit: state.saving
-                    ? null
-                    : () => Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (_) => ExpenseForm(expense: expense),
-                        ),
-                      ),
-                onDelete: state.saving ? null : () => _delete(context, expense),
               ),
             ),
-          ),
+            for (final expense in group.expenses)
+              Dismissible(
+                key: ValueKey(expense.id),
+                direction: state.saving
+                    ? DismissDirection.none
+                    : DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.errorContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.delete_outline),
+                ),
+                confirmDismiss: (_) async {
+                  await _delete(context, expense);
+                  return false;
+                },
+                child: ExpenseListItem(
+                  expense: expense,
+                  onTap: state.saving
+                      ? null
+                      : () => Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => ExpenseForm(expense: expense),
+                          ),
+                        ),
+                  onDelete: state.saving
+                      ? null
+                      : () => _delete(context, expense),
+                ),
+              ),
+          ],
       ],
     );
   }

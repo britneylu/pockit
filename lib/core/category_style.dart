@@ -2,6 +2,16 @@ import 'package:flutter/material.dart';
 
 // share the same earthy category colors across charts and expense cards
 abstract final class CategoryStyle {
+  static IconData icon(String category) => switch (category) {
+    'Food' => Icons.restaurant_outlined,
+    'Shopping' => Icons.shopping_bag_outlined,
+    'Transportation' => Icons.directions_bus_outlined,
+    'Entertainment' => Icons.movie_outlined,
+    'Travel' => Icons.flight_outlined,
+    'Bills' => Icons.receipt_long_outlined,
+    _ => Icons.payments_outlined,
+  };
+
   static Color color(String category) => switch (category) {
     'Food' => const Color(0xFF35634F),
     'Shopping' => const Color(0xFFAD624A),

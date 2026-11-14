@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../core/date_format.dart';
+
 import 'package:provider/provider.dart';
 
 import '../models/currency.dart';
@@ -99,7 +102,7 @@ class ConverterScreen extends StatelessWidget {
                     Text(
                       state.from == state.to
                           ? 'Same currency · no exchange needed'
-                          : 'Rate date: ${quote.date.toIso8601String().split('T').first}',
+                          : 'Rate date: ${formatUsDate(quote.date)}',
                     ),
                     TextButton.icon(
                       onPressed: model.refresh,

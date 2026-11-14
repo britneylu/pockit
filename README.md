@@ -17,7 +17,7 @@ cloud storage and transfers expenses entered during the current guest session.
 | 2 — Currency converter | Implemented | Eight currencies, conversion, swapping, rate dates, validation, loading, and retry |
 | 3 — Expense tracking and accounts | Implemented; device verification remains | Expense CRUD, filters, gestures, Firestore streams, guest transfers, email/password authentication, and Google sign-in |
 | 4 — Dashboard and budget | In progress | Monthly budget settings, spending totals, remaining balance, month selection, animated progress, and category breakdowns and a filterable monthly expense list are implemented |
-| 5 — Polish and accessibility | In progress | Responsive navigation, improved expense cards, and automated tests and budget animations exist; final branding and accessibility checks remain |
+| 5 — Polish and accessibility | In progress | Responsive navigation, improved expense rows, and automated tests and budget animations exist; final branding and accessibility checks remain |
 | 6 — Submission | Planned | Screenshots, final documentation, project archive, and demo video |
 
 “Implemented” describes code in the project, not confirmation that every live Firebase
@@ -40,8 +40,8 @@ setting or device flow has been manually verified.
 - Amount, currency, category, purchase date, and optional description fields.
 - Fixed categories: Food, Shopping, Transportation, Entertainment, Travel, Bills, Other.
 - Category filtering, newest-first ordering, and loading/error/empty states.
-- Swipe-to-delete with confirmation and undo; visible edit/delete buttons are also available.
-- Full-width responsive expense cards with category icons, purchase details, prominent
+- Swipe-to-delete with confirmation and undo; tap a purchase to edit it.
+- Compact expense rows grouped by US-formatted purchase date, with category icons and
   original amounts, and USD conversions for foreign purchases.
 - Integer minor-unit storage with currency-aware precision and half-up USD rounding.
 - Saved original amount, converted USD amount, exchange rate, and effective rate date.
@@ -230,7 +230,7 @@ edits to the same expense currently use last-write-wins behavior.
 
 ## Testing and validation
 
-Latest recorded checks: **53 Flutter tests passed**, `flutter analyze` reported no
+Latest recorded checks: **57 Flutter tests passed**, `flutter analyze` reported no
 issues, and the iOS property-list files passed syntax validation. The Firestore rule
 smoke tests previously passed in local emulators. These checks do not replace manual
 Google OAuth or live-device testing.

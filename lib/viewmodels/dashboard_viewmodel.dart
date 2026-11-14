@@ -145,21 +145,22 @@ class DashboardViewModel extends ChangeNotifier {
 
   // date construction handles year boundaries automatically
   void previousMonth() {
-    _selectedCategory = null;
-    _month = DateTime(_month.year, _month.month - 1);
-    _refresh();
+    selectMonth(DateTime(_month.year, _month.month - 1));
   }
 
   void nextMonth() {
-    _selectedCategory = null;
-    _month = DateTime(_month.year, _month.month + 1);
-    _refresh();
+    selectMonth(DateTime(_month.year, _month.month + 1));
   }
 
   void currentMonth() {
-    _selectedCategory = null;
     final today = DateTime.now();
-    _month = DateTime(today.year, today.month);
+    selectMonth(today);
+  }
+
+  // show the month chosen from the month and year dialog
+  void selectMonth(DateTime month) {
+    _selectedCategory = null;
+    _month = DateTime(month.year, month.month);
     _refresh();
   }
 

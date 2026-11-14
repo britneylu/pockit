@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../core/money.dart';
 import '../models/currency.dart';
 import '../models/expense.dart';
+import '../models/expense_date_group.dart';
 import '../models/exchange_rate.dart';
 import '../repositories/expense_repository.dart';
 import '../services/currency_service.dart';
@@ -14,22 +15,64 @@ import '../services/currency_service.dart';
 class ExpensesState {
   ExpensesState({
     List<Expense> expenses = const [],
+    DateTime? month,
     this.loading = false,
     this.saving = false,
     this.error,
     this.filter,
     this.saveError,
-  }) : expenses = List.unmodifiable(expenses);
+  }) : expenses = List.unmodifiable(expenses),
+       _month = DateTime(
+         (month ?? DateTime.now()).year,
+         (month ?? DateTime.now()).month,
+       );
   final List<Expense> expenses;
+  final DateTime? _month;
   final bool loading;
   final bool saving;
   final String? error;
   final String? saveError;
   final String? filter;
+  // recover old state objects kept alive by hot reload
+  DateTime get month {
+    final value = _month;
+    final now = DateTime.now();
+    return value ?? DateTime(now.year, now.month);
+  }
+
+  // limit purchases to the selected month
+  List<Expense> get monthly => List.unmodifiable(
+    expenses.where(
+      (expense) =>
+          expense.date.year == month.year && expense.date.month == month.month,
+    ),
+  );
   // apply the category filter without changing stored expenses
   List<Expense> get visible => List.unmodifiable(
-    expenses.where((e) => filter == null || e.category == filter),
+    monthly.where((e) => filter == null || e.category == filter),
   );
+  // group after filtering and order dates newest first
+  List<ExpenseDateGroup> get dateGroups {
+    final ordered = [...visible]
+      ..sort((a, b) {
+        final order = b.date.compareTo(a.date);
+        return order == 0 ? b.id.compareTo(a.id) : order;
+      });
+    final groups = <DateTime, List<Expense>>{};
+    for (final expense in ordered) {
+      final date = DateTime(
+        expense.date.year,
+        expense.date.month,
+        expense.date.day,
+      );
+      groups.putIfAbsent(date, () => []).add(expense);
+    }
+    return List.unmodifiable(
+      groups.entries.map(
+        (entry) => ExpenseDateGroup(date: entry.key, expenses: entry.value),
+      ),
+    );
+  }
 }
 
 // coordinate expense validation conversion and storage
@@ -58,6 +101,7 @@ class ExpensesViewModel extends ChangeNotifier {
       error: error,
       saveError: saveError,
       filter: _state.filter,
+      month: _state.month,
     );
     notifyListeners();
   }
@@ -108,6 +152,32 @@ class ExpensesViewModel extends ChangeNotifier {
       error: _state.error,
       saveError: _state.saveError,
       filter: category,
+      month: _state.month,
+    );
+    notifyListeners();
+  }
+
+  // move to the previous calendar month
+  void previousMonth() =>
+      selectMonth(DateTime(_state.month.year, _state.month.month - 1));
+
+  // move to the next calendar month
+  void nextMonth() =>
+      selectMonth(DateTime(_state.month.year, _state.month.month + 1));
+
+  // return to the current calendar month
+  void currentMonth() => selectMonth(DateTime.now());
+
+  // update the visible month without reloading stored expenses
+  void selectMonth(DateTime month) {
+    _state = ExpensesState(
+      expenses: _state.expenses,
+      month: month,
+      loading: _state.loading,
+      saving: _state.saving,
+      error: _state.error,
+      saveError: _state.saveError,
+      filter: _state.filter,
     );
     notifyListeners();
   }
