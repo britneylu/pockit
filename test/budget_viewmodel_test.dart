@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pockit/models/account.dart';
+import 'package:pockit/models/currency.dart';
 import 'package:pockit/repositories/budget_repository.dart';
 import 'package:pockit/viewmodels/auth_viewmodel.dart';
 import 'package:pockit/viewmodels/budget_viewmodel.dart';
@@ -22,6 +23,12 @@ class TestBudgetRepository extends MemoryBudgetRepository {
     if (failWrite) throw Exception('save failed');
     await gate?.future;
     await super.save(amountMinor);
+  }
+
+  @override
+  Future<void> savePreferredCurrency(Currency currency) async {
+    if (failWrite) throw Exception('save failed');
+    await super.savePreferredCurrency(currency);
   }
 }
 
@@ -120,5 +127,23 @@ void main() {
     expect(await saving, isFalse);
     expect(model.state.amountMinor, isNull);
     expect(other.amountMinor, isNull);
+  });
+
+  test('preferred currency persists and reports save failures', () async {
+    final auth = AuthViewModel(FakeAuthService());
+    final repo = TestBudgetRepository();
+    final model = BudgetViewModel(auth, (_) => repo);
+    addTearDown(auth.dispose);
+    addTearDown(model.dispose);
+    await flush();
+
+    // save a supported currency and expose it through immutable state
+    expect(await model.savePreferredCurrency(Currency.jpy), isTrue);
+    expect(repo.preferredCurrency, Currency.jpy);
+    expect(model.state.preferredCurrency, Currency.jpy);
+    repo.failWrite = true;
+    expect(await model.savePreferredCurrency(Currency.eur), isFalse);
+    expect(model.state.preferredCurrency, Currency.jpy);
+    expect(model.state.currencySaveError, isNotNull);
   });
 }

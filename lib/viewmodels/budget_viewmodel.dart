@@ -14,37 +14,65 @@ const _keep = Object();
 class BudgetState {
   const BudgetState({
     this.amountMinor,
+    this._preferredCurrency = Currency.usd,
     this.loading = true,
     this.saving = false,
+    this._currencyLoading = true,
+    this._currencySaving = false,
     this.transferring = false,
     this.loadError,
     this.saveError,
+    this.currencyLoadError,
+    this.currencySaveError,
     this.transferError,
     this.message,
+    this.currencyMessage,
   });
+  // budget fields use their own loading and saving status
   final int? amountMinor;
+  final Currency? _preferredCurrency;
   final bool loading;
   final bool saving;
+  // currency fields load and save independently from the budget
+  final bool? _currencyLoading;
+  final bool? _currencySaving;
   final bool transferring;
   final String? loadError;
   final String? saveError;
+  final String? currencyLoadError;
+  final String? currencySaveError;
   final String? transferError;
   final String? message;
+  final String? currencyMessage;
+  // recover older state objects that remain alive after hot reload
+  Currency get preferredCurrency => _preferredCurrency ?? Currency.usd;
+  bool get currencyLoading => _currencyLoading ?? true;
+  bool get currencySaving => _currencySaving ?? false;
+  // create a new snapshot while preserving unchanged values
   BudgetState copyWith({
     Object? amountMinor = _keep,
+    Currency? preferredCurrency,
     bool? loading,
     bool? saving,
+    bool? currencyLoading,
+    bool? currencySaving,
     bool? transferring,
     Object? loadError = _keep,
     Object? saveError = _keep,
+    Object? currencyLoadError = _keep,
+    Object? currencySaveError = _keep,
     Object? transferError = _keep,
     Object? message = _keep,
+    Object? currencyMessage = _keep,
   }) => BudgetState(
     amountMinor: identical(amountMinor, _keep)
         ? this.amountMinor
         : amountMinor as int?,
+    preferredCurrency: preferredCurrency ?? this.preferredCurrency,
     loading: loading ?? this.loading,
     saving: saving ?? this.saving,
+    currencyLoading: currencyLoading ?? this.currencyLoading,
+    currencySaving: currencySaving ?? this.currencySaving,
     transferring: transferring ?? this.transferring,
     loadError: identical(loadError, _keep)
         ? this.loadError
@@ -52,10 +80,19 @@ class BudgetState {
     saveError: identical(saveError, _keep)
         ? this.saveError
         : saveError as String?,
+    currencyLoadError: identical(currencyLoadError, _keep)
+        ? this.currencyLoadError
+        : currencyLoadError as String?,
+    currencySaveError: identical(currencySaveError, _keep)
+        ? this.currencySaveError
+        : currencySaveError as String?,
     transferError: identical(transferError, _keep)
         ? this.transferError
         : transferError as String?,
     message: identical(message, _keep) ? this.message : message as String?,
+    currencyMessage: identical(currencyMessage, _keep)
+        ? this.currencyMessage
+        : currencyMessage as String?,
   );
 }
 
@@ -67,8 +104,11 @@ class BudgetViewModel extends ChangeNotifier {
   }
   final AuthViewModel _auth;
   final BudgetRepository Function(String) _repositoryFor;
+  // hold guest budgets until the matching account can receive them
   final _pending = <String, int>{};
+  // keep budget and currency updates independent
   StreamSubscription<int?>? _subscription;
+  StreamSubscription<Currency>? _currencySubscription;
   late BudgetRepository _repository;
   BudgetState _state = const BudgetState();
   BudgetState get state => _state;
@@ -109,8 +149,17 @@ class BudgetViewModel extends ChangeNotifier {
   Future<void> _listen(int generation) async {
     // ignore old events while cancellation finishes in the background
     unawaited(_subscription?.cancel());
+    unawaited(_currencySubscription?.cancel());
     if (_disposed || generation != _generation) return;
-    _emit(_state.copyWith(loading: true, loadError: null));
+    _emit(
+      _state.copyWith(
+        loading: true,
+        currencyLoading: true,
+        loadError: null,
+        currencyLoadError: null,
+      ),
+    );
+    // listen to monthly budget changes
     _subscription = _repository.watch().listen(
       (amount) {
         if (_disposed || generation != _generation) return;
@@ -129,11 +178,34 @@ class BudgetViewModel extends ChangeNotifier {
         );
       },
     );
+    // listen to the preferred currency in the same settings document
+    _currencySubscription = _repository.watchPreferredCurrency().listen(
+      (currency) {
+        if (_disposed || generation != _generation) return;
+        _emit(
+          _state.copyWith(
+            preferredCurrency: currency,
+            currencyLoading: false,
+            currencyLoadError: null,
+          ),
+        );
+      },
+      onError: (Object error) {
+        if (_disposed || generation != _generation) return;
+        _emit(
+          _state.copyWith(
+            currencyLoading: false,
+            currencyLoadError: 'Couldn’t load your preferred currency. Check your connection and retry.',
+          ),
+        );
+      },
+    );
     await retryTransfer();
   }
 
   Future<void> reload() => _listen(++_generation);
 
+  // validate and save a usd monthly budget
   Future<bool> save(String input) async {
     if (_disposed ||
         _state.loading ||
@@ -185,6 +257,52 @@ class BudgetViewModel extends ChangeNotifier {
     return false;
   }
 
+  // save the default currency used by new expense forms
+  Future<bool> savePreferredCurrency(Currency currency) async {
+    // block overlapping writes and writes after a load failure
+    if (_disposed ||
+        _state.currencyLoading ||
+        _state.currencySaving ||
+        _state.currencyLoadError != null) {
+      return false;
+    }
+    final generation = _generation;
+    final repository = _repository;
+    // clear old feedback before starting the cloud write
+    _emit(
+      _state.copyWith(
+        currencySaving: true,
+        currencySaveError: null,
+        currencyMessage: null,
+      ),
+    );
+    try {
+      await repository.savePreferredCurrency(currency);
+      // ignore writes that finish after an account change
+      if (_disposed || generation != _generation) return false;
+      _emit(
+        _state.copyWith(
+          preferredCurrency: currency,
+          currencySaving: false,
+          currencyMessage: _userId == null
+              ? 'Preferred currency set for this session'
+              : 'Preferred currency saved',
+        ),
+      );
+      return true;
+    } catch (_) {
+      if (!_disposed && generation == _generation) {
+        _emit(
+          _state.copyWith(
+            currencySaving: false,
+            currencySaveError: 'Couldn’t save your preferred currency. Check your connection and retry.',
+          ),
+        );
+      }
+      return false;
+    }
+  }
+
   Future<void> retryTransfer() async {
     final id = _userId;
     final amount = _pending[id];
@@ -224,6 +342,7 @@ class BudgetViewModel extends ChangeNotifier {
     _generation++;
     _auth.removeListener(_accountChanged);
     _subscription?.cancel();
+    _currencySubscription?.cancel();
     super.dispose();
   }
 }

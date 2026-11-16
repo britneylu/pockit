@@ -33,15 +33,22 @@ service cloud.firestore {
       allow read, delete: if owner(userId);
       allow create, update: if owner(userId) && validExpense();
     }
-    // validate the recurring usd budget for the owning account
+    // validate budget and preferred currency account settings
     match /users/{userId}/settings/preferences {
       allow read: if owner(userId);
       allow create, update: if owner(userId)
-        && request.resource.data.keys().hasAll(['monthlyBudgetMinor', 'reportingCurrency', 'updatedAt'])
-        && request.resource.data.keys().hasOnly(['monthlyBudgetMinor', 'reportingCurrency', 'updatedAt'])
-        && request.resource.data.monthlyBudgetMinor is int
-        && request.resource.data.monthlyBudgetMinor > 0
-        && request.resource.data.monthlyBudgetMinor <= 1000000000000
+        // require shared fields and reject unknown settings
+        && request.resource.data.keys().hasAll(['reportingCurrency', 'updatedAt'])
+        && request.resource.data.keys().hasAny(['monthlyBudgetMinor', 'preferredEntryCurrency'])
+        && request.resource.data.keys().hasOnly(['monthlyBudgetMinor', 'preferredEntryCurrency', 'reportingCurrency', 'updatedAt'])
+        // validate the budget only when it exists
+        && (!request.resource.data.keys().hasAny(['monthlyBudgetMinor'])
+          || (request.resource.data.monthlyBudgetMinor is int
+            && request.resource.data.monthlyBudgetMinor > 0
+            && request.resource.data.monthlyBudgetMinor <= 1000000000000))
+        // validate the preferred currency only when it exists
+        && (!request.resource.data.keys().hasAny(['preferredEntryCurrency'])
+          || request.resource.data.preferredEntryCurrency in ['USD', 'EUR', 'GBP', 'JPY', 'KRW', 'CAD', 'AUD', 'CNY'])
         && request.resource.data.reportingCurrency == 'USD'
         && request.resource.data.updatedAt == request.time;
     }

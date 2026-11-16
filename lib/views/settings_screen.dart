@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../viewmodels/budget_viewmodel.dart';
 import '../widgets/budget_settings_card.dart';
+import '../widgets/preferred_currency_card.dart';
 import '../viewmodels/expenses_viewmodel.dart';
 
 // show the signed in account and sign out controls
@@ -12,11 +13,13 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthViewModel>();
+    final budget = context.watch<BudgetViewModel>().state;
     // check whether an expense write is still pending
     final saving =
         context.watch<ExpensesViewModel>().state.saving ||
-        context.watch<BudgetViewModel>().state.saving ||
-        context.watch<BudgetViewModel>().state.transferring;
+        budget.saving ||
+        budget.currencySaving ||
+        budget.transferring;
     // explain guest storage without requiring an account
     if (auth.state.account == null) {
       return ListView(
@@ -34,7 +37,8 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           const BudgetSettingsCard(guest: true),
-          const Text('Preferred entry currency is coming next.'),
+          // keep guest preferences in memory only
+          const PreferredCurrencyCard(),
         ],
       );
     }
@@ -46,13 +50,9 @@ class SettingsScreen extends StatelessWidget {
           style: Theme.of(context).textTheme.headlineMedium,
         ),
         const SizedBox(height: 16),
-        const Text('ACCOUNT'),
+        Text('Account', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
         Text(auth.state.account?.email ?? ''),
-        const SizedBox(height: 8),
-        const Text(
-          'Your expenses are stored privately under your account in Cloud Firestore.',
-        ),
         // remind the user to reconnect while a save is pending
         if (saving)
           const Padding(
@@ -100,7 +100,8 @@ class SettingsScreen extends StatelessWidget {
         ),
         const SizedBox(height: 32),
         const BudgetSettingsCard(guest: false),
-        const Text('Preferred entry currency is coming next.'),
+        // save signed in preferences to firestore
+        const PreferredCurrencyCard(),
         const SizedBox(height: 16),
         const Text('Pockit · Your money, wherever you go.'),
       ],

@@ -159,13 +159,14 @@ class _BudgetSettingsCardState extends State<BudgetSettingsCard> {
                     child: Text(state.message!),
                   ),
                 ),
-              const SizedBox(height: 12),
-              Text(
-                widget.guest
-                    ? 'Guest budgets last for this session and transfer when you sign in. If your account already has a budget, that budget is kept.'
-                    : 'Saved to your account. Spending summaries are coming next.',
-                style: theme.textTheme.bodySmall,
-              ),
+              // only guests need an extra storage reminder
+              if (widget.guest) ...[
+                const SizedBox(height: 12),
+                Text(
+                  'Guest budgets last for this session and transfer when you sign in. If your account already has a budget, that budget is kept.',
+                  style: theme.textTheme.bodySmall,
+                ),
+              ],
             ],
           ),
         ),

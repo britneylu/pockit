@@ -16,7 +16,7 @@ cloud storage and transfers expenses entered during the current guest session.
 | 1 — Foundation | Mostly complete | App theme, folder structure, navigation, and Firebase client configuration are implemented; repository setup and live configuration checks remain |
 | 2 — Currency converter | Implemented | Eight currencies, conversion, swapping, rate dates, validation, loading, and retry |
 | 3 — Expense tracking and accounts | Implemented; device verification remains | Expense CRUD, filters, gestures, Firestore streams, guest transfers, email/password authentication, and Google sign-in |
-| 4 — Dashboard and budget | In progress | Monthly budget settings, spending totals, remaining balance, month selection, animated progress, and category breakdowns and a filterable monthly expense list are implemented |
+| 4 — Dashboard and budget | In progress | Monthly budget settings, preferred entry currency, spending totals, remaining balance, month selection, animated progress, and category breakdowns are implemented |
 | 5 — Polish and accessibility | In progress | Responsive navigation, improved expense rows, and automated tests and budget animations exist; final branding and accessibility checks remain |
 | 6 — Submission | Planned | Screenshots, final documentation, project archive, and demo video |
 
@@ -76,11 +76,11 @@ setting or device flow has been manually verified.
 
 - [x] Set and update one recurring monthly budget in USD with validation and saving feedback.
 - [x] Save the budget in Firestore as integer USD cents with live updates.
-- [ ] Persist the preferred entry currency in account settings.
+- [x] Persist the preferred entry currency in account settings.
 - [x] Keep guest budgets in memory and transfer on sign-in, preserving an existing account budget.
 - [x] Show monthly spending and remaining budget on Home.
 - [x] Show the percentage of budget used with animated progress, over-budget status, and reduced-motion support.
-- [ ] Include saved USD conversions in totals for foreign purchases.
+- [x] Include saved USD conversions in totals for foreign purchases.
 - [x] Show the amount over budget when spending exceeds the limit.
 - [x] Add previous/next month navigation and a shortcut to the current month.
 - [x] Add a category spending ring, totals, percentages, purchase counts, and comparison bars for the selected month.
@@ -93,10 +93,10 @@ setting or device flow has been manually verified.
 ### Remaining product work
 
 - [ ] Add a converter action to create an expense from the entered amount and currency.
-- [ ] Let users choose the preferred currency for new expense entries while reporting in USD.
+- [x] Let users choose the preferred currency for new expense entries while reporting in USD.
 - [x] Replace the Home placeholder with a monthly spending summary.
 - [x] Add monthly budget editing to Settings.
-- [ ] Add the preferred entry currency to Settings.
+- [x] Add the preferred entry currency to Settings.
 - [ ] Expand loading, empty, and error coverage for budget/dashboard features.
 - [ ] Create the final app icon and launch screen.
 - [ ] Check contrast, larger text, small screens, landscape, and screen-reader behavior.
@@ -153,7 +153,7 @@ hot reload. macOS, Linux, and Windows are not configured Firebase targets.
 Rules allow the owning account to read/delete its expenses. Creates/updates also
 validate field names, amount bounds, supported currencies, categories, description
 length, dates, and the server-generated update timestamp. Other paths remain denied;
-budget validation rules are included; preferred-currency rules will be added later. Local rule files do not change
+budget and preferred-currency validation rules are included. Local rule files do not change
 the live database until published.
 
 Firebase client configuration files contain app identifiers, not administrative
@@ -225,14 +225,13 @@ edits to the same expense currently use last-write-wins behavior.
   the app before a successful upload loses those unsaved entries.
 - Legacy expenses from the earlier device-storage prototype are not imported from
   shared preferences. This is separate from the implemented current-session guest transfer.
-- Preferred entry currency and the
-  converter-to-expense shortcut are not implemented yet.
+- The converter-to-expense shortcut is not implemented yet.
 
 ## Testing and validation
 
-Latest recorded checks: **57 Flutter tests passed**, `flutter analyze` reported no
+Latest recorded checks: **62 Flutter tests passed**, `flutter analyze` reported no
 issues, and the iOS property-list files passed syntax validation. The Firestore rule
-smoke tests previously passed in local emulators. These checks do not replace manual
+smoke tests passed in local emulators. These checks do not replace manual
 Google OAuth or live-device testing.
 
 ```sh

@@ -93,5 +93,11 @@ for invalid in ['0', '-1', '1000000000001']:
 budget_write(token, {**budget_fields, 'monthlyBudgetMinor': {'doubleValue': 12.5}}, 403)
 budget_write(token, {**budget_fields, 'reportingCurrency': {'stringValue': 'EUR'}}, 403)
 budget_write(token, {**budget_fields, 'extra': {'stringValue': 'no'}}, 403)
+# check supported preferred currencies without requiring a budget
+preference_fields = {'preferredEntryCurrency': {'stringValue': 'JPY'},
+                     'reportingCurrency': {'stringValue': 'USD'}}
+budget_write(token, preference_fields)
+budget_write(token, {**preference_fields, 'preferredEntryCurrency': {'stringValue': 'INVALID'}}, 403)
 budget_write(token, {**budget_fields, 'monthlyBudgetMinor': {'integerValue': '130000'}})
-print('Budget rules passed: owner access, cross-account denial, and usd minor-unit validation')
+budget_write(token, {**budget_fields, 'preferredEntryCurrency': {'stringValue': 'CAD'}})
+print('Settings rules passed: owner access plus budget and preferred-currency validation')

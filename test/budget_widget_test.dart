@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pockit/app.dart';
+import 'package:pockit/models/currency.dart';
 import 'package:pockit/repositories/budget_repository.dart';
 
 import 'helpers/fake_auth_service.dart';
@@ -72,5 +73,37 @@ void main() {
     await tester.pumpAndSettle();
     expect(repo.amountMinor, 95000);
     expect(find.text('Monthly budget saved'), findsOneWidget);
+  });
+
+  testWidgets('preferred currency saves and prefills new expenses', (
+    tester,
+  ) async {
+    final repo = MemoryBudgetRepository();
+    await tester.pumpWidget(
+      PockitApp(
+        authService: FakeAuthService(),
+        expenseRepositoryFactory: (_) => MemoryExpenseRepository(),
+        budgetRepositoryFactory: (_) => repo,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    const preferredCurrency = Key('preferredCurrency-USD');
+    await reveal(tester, find.byKey(preferredCurrency));
+    await tester.tap(find.byKey(preferredCurrency));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('JPY · Japanese Yen').last);
+    await tester.pumpAndSettle();
+    expect(repo.preferredCurrency, Currency.jpy);
+    expect(find.byKey(const Key('preferredCurrency-JPY')), findsOneWidget);
+
+    // open the global form and confirm it uses the saved preference
+    await tester.tap(find.byTooltip('Add expense'));
+    await tester.pumpAndSettle();
+    final field = tester.widget<DropdownButtonFormField<Currency>>(
+      find.byKey(const Key('expenseCurrency')),
+    );
+    expect(field.initialValue, Currency.jpy);
   });
 }

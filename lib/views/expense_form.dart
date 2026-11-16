@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-
-import '../core/date_format.dart';
-
 import 'package:provider/provider.dart';
 
+import '../core/date_format.dart';
 import '../core/money.dart';
 import '../models/currency.dart';
 import '../models/expense.dart';
+import '../viewmodels/budget_viewmodel.dart';
 import '../viewmodels/expenses_viewmodel.dart';
 
 // use the same form to add and edit expenses
@@ -30,7 +29,10 @@ class _ExpenseFormState extends State<ExpenseForm> {
   void initState() {
     super.initState();
     final expense = widget.expense;
-    _currency = expense?.currency ?? Currency.usd;
+    // keep an existing currency or use the saved preference for new entries
+    _currency =
+        expense?.currency ??
+        context.read<BudgetViewModel>().state.preferredCurrency;
     _category = expense?.category ?? expenseCategories.first;
     _date = expense?.date ?? DateUtils.dateOnly(DateTime.now());
     _amount = TextEditingController(
@@ -111,6 +113,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<Currency>(
+                      key: const Key('expenseCurrency'),
                       initialValue: _currency,
                       isExpanded: true,
                       decoration: const InputDecoration(labelText: 'Currency'),

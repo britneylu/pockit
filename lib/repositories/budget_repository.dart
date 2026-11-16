@@ -2,14 +2,24 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../models/currency.dart';
+
 // store one recurring monthly limit in usd cents
 abstract interface class BudgetRepository {
+  // stream the recurring monthly budget
   Stream<int?> watch();
+  // stream the default currency for new expenses
+  Stream<Currency> watchPreferredCurrency();
+  // save the budget without replacing other settings
   Future<void> save(int amountMinor);
+  // save the currency without replacing the budget
+  Future<void> savePreferredCurrency(Currency currency);
+  // import a guest budget only when no account budget exists
   Future<int> saveIfUnset(int amountMinor);
 }
 
 class FirestoreBudgetRepository implements BudgetRepository {
+  // keep both settings in one private account document
   FirestoreBudgetRepository(String userId, {FirebaseFirestore? firestore})
     : _document = (firestore ?? FirebaseFirestore.instance)
           .collection('users')
@@ -19,9 +29,21 @@ class FirestoreBudgetRepository implements BudgetRepository {
   final DocumentReference<Map<String, dynamic>> _document;
 
   @override
+  // watch cloud budget changes from other sessions
   Stream<int?> watch() => _document.snapshots().map(
     (snapshot) => snapshot.data()?['monthlyBudgetMinor'] as int?,
   );
+
+  @override
+  // use usd when an older settings document has no preference yet
+  Stream<Currency> watchPreferredCurrency() =>
+      _document.snapshots().map((snapshot) {
+        final code = snapshot.data()?['preferredEntryCurrency'] as String?;
+        for (final currency in Currency.values) {
+          if (currency.code == code) return currency;
+        }
+        return Currency.usd;
+      });
 
   Map<String, dynamic> _fields(int amountMinor) => {
     'monthlyBudgetMinor': amountMinor,
@@ -31,6 +53,14 @@ class FirestoreBudgetRepository implements BudgetRepository {
   @override
   Future<void> save(int amountMinor) =>
       _document.set(_fields(amountMinor), SetOptions(merge: true));
+
+  @override
+  // merge the preference without replacing the saved budget
+  Future<void> savePreferredCurrency(Currency currency) => _document.set({
+    'preferredEntryCurrency': currency.code,
+    'reportingCurrency': 'USD',
+    'updatedAt': FieldValue.serverTimestamp(),
+  }, SetOptions(merge: true));
 
   @override
   // keep an existing account budget when importing a guest budget
@@ -50,15 +80,20 @@ class FirestoreBudgetRepository implements BudgetRepository {
 
 // keep guest settings in memory for the current session
 class MemoryBudgetRepository implements BudgetRepository {
+  // keep guest values only for the current app session
   int? amountMinor;
+  Currency preferredCurrency = Currency.usd;
   final _listeners = <MultiStreamController<int?>>{};
+  final _currencyListeners = <MultiStreamController<Currency>>{};
   @override
+  // send the current guest budget to each new listener
   Stream<int?> watch() => Stream.multi((listener) {
     _listeners.add(listener);
     listener.add(amountMinor);
     listener.onCancel = () => _listeners.remove(listener);
   });
   @override
+  // update all screens that use the guest budget
   Future<void> save(int amountMinor) async {
     this.amountMinor = amountMinor;
     for (final listener in _listeners) {
@@ -67,6 +102,23 @@ class MemoryBudgetRepository implements BudgetRepository {
   }
 
   @override
+  // notify open forms when the guest preference changes
+  Stream<Currency> watchPreferredCurrency() => Stream.multi((listener) {
+    _currencyListeners.add(listener);
+    listener.add(preferredCurrency);
+    listener.onCancel = () => _currencyListeners.remove(listener);
+  });
+
+  @override
+  Future<void> savePreferredCurrency(Currency currency) async {
+    preferredCurrency = currency;
+    for (final listener in _currencyListeners) {
+      listener.add(currency);
+    }
+  }
+
+  @override
+  // preserve an existing value during guest transfer
   Future<int> saveIfUnset(int amountMinor) async {
     if (this.amountMinor == null) await save(amountMinor);
     return this.amountMinor!;
