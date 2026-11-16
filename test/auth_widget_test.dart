@@ -107,9 +107,11 @@ void main() {
       find.text('No expenses yet. Add your first purchase to get started.'),
       findsOneWidget,
     );
-    await tester.tap(find.text('Settings'));
+    await tester.tap(find.byKey(const Key('profileButton')));
     await tester.pumpAndSettle();
     expect(find.text('second@example.com'), findsOneWidget);
+    expect(find.text('Cloud sync on'), findsOneWidget);
+    expect(find.text('0 expenses saved'), findsOneWidget);
     await tester.tap(find.widgetWithText(OutlinedButton, 'Sign out'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Sign out'));

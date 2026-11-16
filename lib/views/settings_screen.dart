@@ -2,24 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../viewmodels/auth_viewmodel.dart';
-import '../viewmodels/budget_viewmodel.dart';
 import '../widgets/budget_settings_card.dart';
 import '../widgets/preferred_currency_card.dart';
-import '../viewmodels/expenses_viewmodel.dart';
 
-// show the signed in account and sign out controls
+// show budget and default currency settings
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthViewModel>();
-    final budget = context.watch<BudgetViewModel>().state;
-    // check whether an expense write is still pending
-    final saving =
-        context.watch<ExpensesViewModel>().state.saving ||
-        budget.saving ||
-        budget.currencySaving ||
-        budget.transferring;
     // explain guest storage without requiring an account
     if (auth.state.account == null) {
       return ListView(
@@ -33,7 +24,7 @@ class SettingsScreen extends StatelessWidget {
           const Text('Guest mode'),
           const SizedBox(height: 8),
           const Text(
-            'Explore Pockit without an account. Expenses stay in this session only and disappear when you close or restart the app. Use Sign in at the top right to save future expenses to your account.',
+            'Guest expenses are temporary and transfer when you sign in.',
           ),
           const SizedBox(height: 24),
           const BudgetSettingsCard(guest: true),
@@ -49,56 +40,7 @@ class SettingsScreen extends StatelessWidget {
           'Make room for your goals.',
           style: Theme.of(context).textTheme.headlineMedium,
         ),
-        const SizedBox(height: 16),
-        Text('Account', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        Text(auth.state.account?.email ?? ''),
-        // remind the user to reconnect while a save is pending
-        if (saving)
-          const Padding(
-            padding: EdgeInsets.only(top: 12),
-            child: Text(
-              'Your changes are still syncing. Keep the app open and reconnect to finish saving.',
-            ),
-          ),
-        if (auth.state.error != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: Semantics(liveRegion: true, child: Text(auth.state.error!)),
-          ),
-        const SizedBox(height: 16),
-        OutlinedButton.icon(
-          onPressed: auth.state.busy
-              ? null
-              : () async {
-                  // ask before ending the session
-                  final confirmed = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Sign out?'),
-                      content: Text(
-                        saving
-                            ? 'Your changes are still syncing. They may not have reached the cloud yet. Sign out anyway?'
-                            : 'Your cloud expenses will be available when you sign in again.',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Cancel'),
-                        ),
-                        FilledButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Sign out'),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (confirmed == true) await auth.signOut();
-                },
-          icon: const Icon(Icons.logout),
-          label: Text(auth.state.busy ? 'Signing out…' : 'Sign out'),
-        ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 24),
         const BudgetSettingsCard(guest: false),
         // save signed in preferences to firestore
         const PreferredCurrencyCard(),

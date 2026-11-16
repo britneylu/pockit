@@ -72,10 +72,6 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                     const SizedBox(height: 8),
                     const Text('Your money, wherever you go.'),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Sign in to save expenses across sessions. Your guest expenses will transfer to your account.',
-                    ),
                     const SizedBox(height: 32),
                     TextFormField(
                       key: const Key('authEmail'),

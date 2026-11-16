@@ -17,6 +17,7 @@ import 'viewmodels/guest_transfer_viewmodel.dart';
 import 'services/auth_service.dart';
 import 'viewmodels/auth_viewmodel.dart';
 import 'views/auth_screen.dart';
+import 'views/account_screen.dart';
 import 'views/settings_screen.dart';
 import 'viewmodels/expenses_viewmodel.dart';
 
@@ -228,7 +229,7 @@ class _PockitShellState extends State<PockitShell> {
             centerTitle: false,
             actions: [
               if (auth.state.account == null)
-                TextButton.icon(
+                TextButton(
                   key: const Key('signInButton'),
                   onPressed: auth.state.initializing
                       ? null
@@ -238,8 +239,19 @@ class _PockitShellState extends State<PockitShell> {
                             builder: (_) => const AuthScreen(),
                           ),
                         ),
-                  icon: const Icon(Icons.login),
-                  label: const Text('Sign in'),
+                  child: const Text('SIGN IN'),
+                )
+              else
+                IconButton(
+                  key: const Key('profileButton'),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => const AccountScreen(),
+                    ),
+                  ),
+                  tooltip: 'Profile',
+                  icon: const Icon(Icons.account_circle_outlined),
                 ),
               const SizedBox(width: 8),
             ],

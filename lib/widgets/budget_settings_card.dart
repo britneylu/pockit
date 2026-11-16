@@ -75,9 +75,7 @@ class _BudgetSettingsCardState extends State<BudgetSettingsCard> {
             children: [
               Text('Monthly budget', style: theme.textTheme.titleLarge),
               const SizedBox(height: 8),
-              const Text(
-                'Set one spending limit in USD. This amount applies each month until you change it.',
-              ),
+              const Text('Set a monthly spending limit in USD.'),
               const SizedBox(height: 16),
               if (state.loading)
                 const LinearProgressIndicator(semanticsLabel: 'Loading budget'),
@@ -90,7 +88,7 @@ class _BudgetSettingsCardState extends State<BudgetSettingsCard> {
               ] else ...[
                 Text(
                   state.amountMinor == null
-                      ? 'No budget set yet'
+                      ? 'No budget yet'
                       : 'Current budget: ${formatMinor(state.amountMinor!, Currency.usd)} USD',
                 ),
                 const SizedBox(height: 16),
@@ -102,7 +100,7 @@ class _BudgetSettingsCardState extends State<BudgetSettingsCard> {
                     decimal: true,
                   ),
                   decoration: const InputDecoration(
-                    labelText: 'Monthly budget amount',
+                    labelText: 'Budget amount',
                     prefixText: '\$ ',
                     suffixText: 'USD',
                     hintText: '1200.00',
@@ -163,7 +161,7 @@ class _BudgetSettingsCardState extends State<BudgetSettingsCard> {
               if (widget.guest) ...[
                 const SizedBox(height: 12),
                 Text(
-                  'Guest budgets last for this session and transfer when you sign in. If your account already has a budget, that budget is kept.',
+                  'Transfers when you sign in unless the account already has a budget.',
                   style: theme.textTheme.bodySmall,
                 ),
               ],
