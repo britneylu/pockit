@@ -93,10 +93,10 @@ void main() {
     await reveal(tester, find.byKey(preferredCurrency));
     await tester.tap(find.byKey(preferredCurrency));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('JPY · Japanese Yen').last);
+    await tester.tap(find.text('EUR · Euro').last);
     await tester.pumpAndSettle();
-    expect(repo.preferredCurrency, Currency.jpy);
-    expect(find.byKey(const Key('preferredCurrency-JPY')), findsOneWidget);
+    expect(repo.preferredCurrency, Currency.eur);
+    expect(find.byKey(const Key('preferredCurrency-EUR')), findsOneWidget);
 
     // open the global form and confirm it uses the saved preference
     await tester.tap(find.byTooltip('Add expense'));
@@ -104,6 +104,6 @@ void main() {
     final field = tester.widget<DropdownButtonFormField<Currency>>(
       find.byKey(const Key('expenseCurrency')),
     );
-    expect(field.initialValue, Currency.jpy);
+    expect(field.initialValue, Currency.eur);
   });
 }

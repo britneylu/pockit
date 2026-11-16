@@ -54,6 +54,7 @@ setting or device flow has been manually verified.
 - USD, EUR, GBP, JPY, KRW, CAD, AUD, and CNY.
 - Source/destination selection, currency swapping, amount validation, and rate refresh.
 - Converted amount and effective rate date.
+- Add a successful conversion as an expense with the source amount and currency prefilled.
 - Loading indicators, error messages, and retry actions.
 - Local calculation when the amount changes, without a request for every keystroke.
 - Protection against older network responses replacing the latest selected pair.
@@ -92,7 +93,7 @@ setting or device flow has been manually verified.
 
 ### Remaining product work
 
-- [ ] Add a converter action to create an expense from the entered amount and currency.
+- [x] Add a converter action to create an expense from the entered amount and currency.
 - [x] Let users choose the preferred currency for new expense entries while reporting in USD.
 - [x] Replace the Home placeholder with a monthly spending summary.
 - [x] Add monthly budget editing to Settings.
@@ -225,11 +226,11 @@ edits to the same expense currently use last-write-wins behavior.
   the app before a successful upload loses those unsaved entries.
 - Legacy expenses from the earlier device-storage prototype are not imported from
   shared preferences. This is separate from the implemented current-session guest transfer.
-- The converter-to-expense shortcut is not implemented yet.
+- Converter results can prefill a new expense with the entered amount and source currency.
 
 ## Testing and validation
 
-Latest recorded checks: **62 Flutter tests passed**, `flutter analyze` reported no
+Latest recorded checks: **63 Flutter tests passed**, `flutter analyze` reported no
 issues, and the iOS property-list files passed syntax validation. The Firestore rule
 smoke tests passed in local emulators. These checks do not replace manual
 Google OAuth or live-device testing.

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-
-import '../core/date_format.dart';
-
 import 'package:provider/provider.dart';
 
-import '../models/currency.dart';
+import '../core/date_format.dart';
 import '../viewmodels/converter_viewmodel.dart';
+import '../widgets/currency_dropdown.dart';
+import 'expense_form.dart';
 
 // display currency conversion inputs and results
 class ConverterScreen extends StatelessWidget {
@@ -41,7 +40,7 @@ class ConverterScreen extends StatelessWidget {
           onChanged: model.setAmount,
         ),
         const SizedBox(height: 20),
-        _CurrencySelector(
+        CurrencyDropdown(
           label: 'From',
           value: state.from,
           onChanged: model.setFrom,
@@ -53,15 +52,32 @@ class ConverterScreen extends StatelessWidget {
             icon: const Icon(Icons.swap_vert),
           ),
         ),
-        _CurrencySelector(label: 'To', value: state.to, onChanged: model.setTo),
+        CurrencyDropdown(label: 'To', value: state.to, onChanged: model.setTo),
         const SizedBox(height: 24),
         Card(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('CONVERTED AMOUNT'),
+                // keep the result title and refresh action on one line
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Conversion',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: state.status == ConversionStatus.loading
+                          ? null
+                          : model.refresh,
+                      tooltip: 'Refresh rate',
+                      icon: const Icon(Icons.refresh),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 12),
                 // show loading error or result content for the current request
                 if (state.status == ConversionStatus.loading)
@@ -90,24 +106,39 @@ class ConverterScreen extends StatelessWidget {
                   else
                     Text(
                       state.amountError == null
-                          ? 'Enter an amount to get started.'
+                          ? 'Enter an amount'
                           : 'Check the amount above.',
                     ),
                   if (quote != null) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      '1 ${state.from.code} = ${quote.rate.toStringAsFixed(6)} ${state.to.code}',
-                    ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 10),
+                    // combine the rate and date into one compact line
                     Text(
                       state.from == state.to
-                          ? 'Same currency · no exchange needed'
-                          : 'Rate date: ${formatUsDate(quote.date)}',
+                          ? 'No exchange needed'
+                          : '1 ${state.from.code} = ${quote.rate.toStringAsFixed(6)} ${state.to.code} · ${formatUsDate(quote.date)}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                    TextButton.icon(
-                      onPressed: model.refresh,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Refresh rate'),
+                  ],
+                  if (result != null) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        // prefill the form with the amount the user entered
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => ExpenseForm(
+                              initialAmount: state.amount.trim(),
+                              initialCurrency: state.from,
+                            ),
+                          ),
+                        ),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add as expense'),
+                      ),
                     ),
                   ],
                 ],
@@ -115,45 +146,13 @@ class ConverterScreen extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 16),
-        const Text(
-          'Reference rates from Frankfurter. Rates update daily; your bank or card provider may charge a different rate or fees.',
+        const SizedBox(height: 12),
+        Text(
+          'Frankfurter rates may vary from your bank.',
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
       ],
     );
   }
-}
-
-// reuse the supported currency dropdown for both selections
-class _CurrencySelector extends StatelessWidget {
-  const _CurrencySelector({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-  final String label;
-  final Currency value;
-  final ValueChanged<Currency> onChanged;
-
-  @override
-  Widget build(BuildContext context) => DropdownButtonFormField<Currency>(
-    key: ValueKey('$label-${value.code}'),
-    initialValue: value,
-    isExpanded: true,
-    decoration: InputDecoration(labelText: label),
-    items: Currency.values
-        .map(
-          (currency) => DropdownMenuItem(
-            value: currency,
-            child: Text(
-              '${currency.code} · ${currency.label}',
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        )
-        .toList(),
-    onChanged: (currency) {
-      if (currency != null) onChanged(currency);
-    },
-  );
 }

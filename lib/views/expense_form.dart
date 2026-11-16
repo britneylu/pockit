@@ -7,11 +7,20 @@ import '../models/currency.dart';
 import '../models/expense.dart';
 import '../viewmodels/budget_viewmodel.dart';
 import '../viewmodels/expenses_viewmodel.dart';
+import '../widgets/category_dropdown.dart';
+import '../widgets/currency_dropdown.dart';
 
 // use the same form to add and edit expenses
 class ExpenseForm extends StatefulWidget {
-  const ExpenseForm({super.key, this.expense});
+  const ExpenseForm({
+    super.key,
+    this.expense,
+    this.initialAmount,
+    this.initialCurrency,
+  });
   final Expense? expense;
+  final String? initialAmount;
+  final Currency? initialCurrency;
   @override
   State<ExpenseForm> createState() => _ExpenseFormState();
 }
@@ -32,12 +41,13 @@ class _ExpenseFormState extends State<ExpenseForm> {
     // keep an existing currency or use the saved preference for new entries
     _currency =
         expense?.currency ??
+        widget.initialCurrency ??
         context.read<BudgetViewModel>().state.preferredCurrency;
     _category = expense?.category ?? expenseCategories.first;
     _date = expense?.date ?? DateUtils.dateOnly(DateTime.now());
     _amount = TextEditingController(
       text: expense == null
-          ? ''
+          ? widget.initialAmount ?? ''
           : formatMinor(expense.amountMinor, expense.currency),
     );
     _description = TextEditingController(text: expense?.description ?? '');
@@ -94,6 +104,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
                   padding: const EdgeInsets.all(24),
                   children: [
                     TextFormField(
+                      key: const Key('expenseAmount'),
                       controller: _amount,
                       enabled: !saving,
                       keyboardType: const TextInputType.numberWithOptions(
@@ -112,35 +123,21 @@ class _ExpenseFormState extends State<ExpenseForm> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<Currency>(
-                      key: const Key('expenseCurrency'),
-                      initialValue: _currency,
-                      isExpanded: true,
-                      decoration: const InputDecoration(labelText: 'Currency'),
-                      items: Currency.values
-                          .map(
-                            (c) => DropdownMenuItem(
-                              value: c,
-                              child: Text('${c.code} · ${c.label}'),
-                            ),
-                          )
-                          .toList(),
+                    CurrencyDropdown(
+                      fieldKey: const Key('expenseCurrency'),
+                      label: 'Currency',
+                      value: _currency,
                       onChanged: saving
                           ? null
-                          : (value) => setState(() => _currency = value!),
+                          : (value) => setState(() => _currency = value),
                     ),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      initialValue: _category,
-                      decoration: const InputDecoration(labelText: 'Category'),
-                      items: expenseCategories
-                          .map(
-                            (c) => DropdownMenuItem(value: c, child: Text(c)),
-                          )
-                          .toList(),
+                    CategoryDropdown(
+                      fieldKey: const Key('expenseCategory'),
+                      value: _category,
                       onChanged: saving
                           ? null
-                          : (value) => setState(() => _category = value!),
+                          : (value) => setState(() => _category = value),
                     ),
                     const SizedBox(height: 16),
                     OutlinedButton.icon(
@@ -171,7 +168,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
                     ),
                     const SizedBox(height: 16),
                     const Text(
-                      'Foreign purchases use the latest available daily rate, even for past purchase dates. The USD amount and effective rate date are fixed when saved. Changing only category or description preserves that conversion.',
+                      'Foreign amounts use the latest daily rate. The saved USD value stays fixed.',
                     ),
                     if (widget.expense != null) ...[
                       const SizedBox(height: 12),

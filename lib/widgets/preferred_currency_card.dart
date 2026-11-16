@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/currency.dart';
 import '../viewmodels/budget_viewmodel.dart';
+import 'currency_dropdown.dart';
 
 // choose the currency preselected on new expense forms
 class PreferredCurrencyCard extends StatelessWidget {
@@ -39,29 +39,13 @@ class PreferredCurrencyCard extends StatelessWidget {
               ),
             ] else
               // save the preference as soon as a currency is selected
-              DropdownButtonFormField<Currency>(
-                // rebuild the field when a cloud update changes the value
-                key: ValueKey(
+              CurrencyDropdown(
+                fieldKey: ValueKey(
                   'preferredCurrency-${state.preferredCurrency.code}',
                 ),
-                initialValue: state.preferredCurrency,
-                isExpanded: true,
-                decoration: const InputDecoration(labelText: 'New expenses'),
-                items: Currency.values
-                    .map(
-                      (currency) => DropdownMenuItem(
-                        value: currency,
-                        child: Text('${currency.code} · ${currency.label}'),
-                      ),
-                    )
-                    .toList(),
-                onChanged: disabled
-                    ? null
-                    : (currency) {
-                        if (currency != null) {
-                          model.savePreferredCurrency(currency);
-                        }
-                      },
+                label: 'New expenses',
+                value: state.preferredCurrency,
+                onChanged: disabled ? null : model.savePreferredCurrency,
               ),
             if (state.currencySaving)
               const Padding(

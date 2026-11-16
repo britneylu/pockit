@@ -69,6 +69,44 @@ void main() {
     expect(find.text('110.00 USD'), findsOneWidget);
   });
 
+  testWidgets('converter prefills and saves a new expense', (tester) async {
+    final repo = MemoryExpenseRepository();
+    await tester.pumpWidget(
+      PockitApp(
+        budgetRepositoryFactory: (_) => MemoryBudgetRepository(),
+        currencyService: FakeCurrencyService(),
+        authService: FakeAuthService(),
+        expenseRepositoryFactory: (_) => repo,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Convert'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('amount')), '100');
+    await tester.tap(find.byTooltip('Swap currencies'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Add as expense'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Add as expense'));
+    await tester.pumpAndSettle();
+
+    // confirm the converter source values reached the expense form
+    final amount = tester.widget<TextFormField>(
+      find.byKey(const Key('expenseAmount')),
+    );
+    final currency = tester.widget<DropdownButtonFormField<Currency>>(
+      find.byKey(const Key('expenseCurrency')),
+    );
+    expect(amount.controller!.text, '100');
+    expect(currency.initialValue, Currency.eur);
+    await tester.ensureVisible(find.text('Save expense'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save expense'));
+    await tester.pumpAndSettle();
+    expect(repo.expenses.single.amountMinor, 10000);
+    expect(repo.expenses.single.currency, Currency.eur);
+  });
+
   testWidgets('invalid amount has feedback and no result', (tester) async {
     await openConverter(tester, FakeCurrencyService());
     await tester.enterText(find.byKey(const Key('amount')), '-10');
@@ -90,7 +128,7 @@ void main() {
     await tester.tap(find.text('Retry'));
     await tester.pumpAndSettle();
     expect(find.text('Retry'), findsNothing);
-    expect(find.text('Rate date: 11/04/2026'), findsOneWidget);
+    expect(find.text('1 USD = 0.900000 EUR · 11/04/2026'), findsOneWidget);
   });
 
   testWidgets('small screen and large text remain scrollable', (tester) async {

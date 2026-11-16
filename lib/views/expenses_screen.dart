@@ -1,39 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../core/category_style.dart';
 import '../core/date_format.dart';
 import '../core/money.dart';
 import '../models/expense.dart';
 import '../viewmodels/expenses_viewmodel.dart';
 import 'expense_form.dart';
+import '../widgets/category_dropdown.dart';
 import '../widgets/expense_list_item.dart';
 import '../widgets/month_selector.dart';
 
 // show purchases grouped by date with tap editing and swipe deletion
 class ExpensesScreen extends StatelessWidget {
   const ExpensesScreen({super.key});
-
-  // pair each category with its shared color and icon
-  Widget _categoryLabel(BuildContext context, String category) {
-    final all = category == 'All categories';
-    final color = all
-        ? Theme.of(context).colorScheme.onSurfaceVariant
-        : CategoryStyle.color(category);
-    return Row(
-      children: [
-        Icon(
-          all ? Icons.filter_list : CategoryStyle.icon(category),
-          size: 19,
-          color: color,
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(category, maxLines: 1, overflow: TextOverflow.ellipsis),
-        ),
-      ],
-    );
-  }
 
   // confirm deletion and offer an undo action after success
   Future<void> _delete(BuildContext context, Expense expense) async {
@@ -111,28 +90,12 @@ class ExpensesScreen extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         // keep the category menu compact and scrollable
-        DropdownButtonFormField<String>(
-          initialValue: state.filter ?? 'All categories',
-          isExpanded: true,
-          itemHeight: 52,
-          menuMaxHeight: 320,
-          borderRadius: BorderRadius.circular(16),
-          dropdownColor: Colors.white,
-          decoration: const InputDecoration(
-            labelText: 'Category',
-            isDense: true,
-            contentPadding: EdgeInsets.fromLTRB(14, 12, 12, 12),
+        CategoryDropdown(
+          value: state.filter ?? CategoryDropdown.allCategories,
+          includeAll: true,
+          onChanged: (value) => model.setFilter(
+            value == CategoryDropdown.allCategories ? null : value,
           ),
-          items: ['All categories', ...expenseCategories]
-              .map(
-                (category) => DropdownMenuItem(
-                  value: category,
-                  child: _categoryLabel(context, category),
-                ),
-              )
-              .toList(),
-          onChanged: (value) =>
-              model.setFilter(value == 'All categories' ? null : value),
         ),
         const SizedBox(height: 16),
         // handle loading errors and empty results before showing date groups
