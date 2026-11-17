@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 // share the green palette and rounded controls across screens
 ThemeData get appTheme => ThemeData(

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 // share the same earthy category colors across charts and expense cards
 abstract final class CategoryStyle {

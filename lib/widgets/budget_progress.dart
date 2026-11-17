@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 // animate the fill while keeping the true percentage visible above the limit
 class BudgetProgress extends StatelessWidget {

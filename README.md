@@ -17,7 +17,7 @@ cloud storage and transfers expenses entered during the current guest session.
 | 2 — Currency converter | Implemented | Eight currencies, conversion, swapping, rate dates, validation, loading, and retry |
 | 3 — Expense tracking and accounts | Implemented; device verification remains | Expense CRUD, filters, gestures, Firestore streams, guest transfers, email/password authentication, and Google sign-in |
 | 4 — Dashboard and budget | In progress | Monthly budget settings, preferred entry currency, spending totals, remaining balance, month selection, animated progress, and category breakdowns are implemented |
-| 5 — Polish and accessibility | In progress | Responsive navigation, improved expense rows, and automated tests and budget animations exist; final branding and accessibility checks remain |
+| 5 — Polish and accessibility | In progress | Responsive navigation, final app branding, improved expense rows, automated tests, and budget animations exist; accessibility checks remain |
 | 6 — Submission | Planned | Screenshots, final documentation, project archive, and demo video |
 
 “Implemented” describes code in the project, not confirmation that every live Firebase
@@ -28,6 +28,7 @@ setting or device flow has been manually verified.
 ### App foundation
 
 - Dark green and warm off-white Material theme with rounded controls and cards.
+- Branded Pockit launcher icon and native launch screen on iOS and Android.
 - Home, Expenses, Convert, and Settings tabs.
 - Bottom navigation on smaller screens and a navigation rail on wider screens.
 - Guest-first entry with a **Sign in** button in the top-right corner.
@@ -99,7 +100,7 @@ setting or device flow has been manually verified.
 - [x] Add monthly budget editing to Settings.
 - [x] Add the preferred entry currency to Settings.
 - [ ] Expand loading, empty, and error coverage for budget/dashboard features.
-- [ ] Create the final app icon and launch screen.
+- [x] Create the final app icon and launch screen.
 - [ ] Check contrast, larger text, small screens, landscape, and screen-reader behavior.
 - [ ] Manually verify Google authentication, guest transfers, and cloud sync on target platforms.
 
@@ -131,7 +132,9 @@ hot reload. macOS, Linux, and Windows are not configured Firebase targets.
 | `cloud_firestore` | Per-account expense storage and live updates |
 | `google_sign_in` | Native Google account authentication |
 | `cupertino_icons` | iOS-style icon library |
+| `material_ui`, `cupertino_ui` | Flutter 3.50 Material and Cupertino interface libraries |
 | `shared_preferences` | Retained from the earlier local-storage prototype; current expenses use memory or Firestore |
+| `flutter_launcher_icons`, `flutter_native_splash` | Native app icon and launch screen generation |
 | `flutter_test`, `flutter_lints` | Automated testing and static analysis |
 
 ## Firebase setup and checks
