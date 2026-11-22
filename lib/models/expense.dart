@@ -2,14 +2,23 @@ import 'currency.dart';
 
 // limit expenses to the supported categories
 const expenseCategories = [
-  'Food',
-  'Shopping',
+  'Housing',
+  'Groceries',
+  'Dining',
   'Transportation',
+  'Bills',
+  'Subscriptions',
+  'Shopping',
   'Entertainment',
   'Travel',
-  'Bills',
+  'Health',
+  'Education',
   'Other',
 ];
+
+// convert the retired food category when old records are loaded
+String normalizeExpenseCategory(String category) =>
+    category == 'Food' ? 'Dining' : category;
 
 // keep the original purchase and its fixed usd conversion together
 class Expense {
@@ -42,7 +51,7 @@ class Expense {
     'amountUsdMinor': amountUsdMinor,
     'exchangeRate': exchangeRate,
     'rateDate': rateDate.toIso8601String(),
-    'category': category,
+    'category': normalizeExpenseCategory(category),
     'description': description,
     'date': date.toIso8601String(),
   };
@@ -54,7 +63,7 @@ class Expense {
     amountUsdMinor: json['amountUsdMinor'] as int,
     exchangeRate: (json['exchangeRate'] as num).toDouble(),
     rateDate: DateTime.parse(json['rateDate'] as String),
-    category: json['category'] as String,
+    category: normalizeExpenseCategory(json['category'] as String),
     description: json['description'] as String,
     date: DateTime.parse(json['date'] as String),
   );

@@ -72,7 +72,7 @@ void main() {
         amountUsdMinor: 100,
         exchangeRate: 1,
         rateDate: now,
-        category: 'Food',
+        category: 'Dining',
         description: 'Private purchase',
         date: now,
       ),

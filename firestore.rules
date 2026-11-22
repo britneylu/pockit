@@ -23,7 +23,9 @@ service cloud.firestore {
         && data.rateDate is timestamp
         && data.expenseDate is timestamp && data.expenseDate <= request.time
         // limit categories and description length
-        && data.category in ['Food', 'Shopping', 'Transportation', 'Entertainment', 'Travel', 'Bills', 'Other']
+        && data.category in ['Housing', 'Groceries', 'Dining', 'Transportation',
+          'Bills', 'Subscriptions', 'Shopping', 'Entertainment', 'Travel',
+          'Health', 'Education', 'Other']
         && data.description is string && data.description.size() <= 200
         // require the update timestamp to come from the server
         && data.updatedAt == request.time;

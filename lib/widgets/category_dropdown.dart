@@ -25,10 +25,12 @@ class CategoryDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final options = [if (includeAll) allCategories, ...expenseCategories];
+    // keep legacy food values valid during hot reload and migration
+    final selectedValue = normalizeExpenseCategory(value);
     return DropdownButtonFormField<String>(
       // rebuild the field when an outside filter changes its value
-      key: fieldKey ?? ValueKey('$label-$value'),
-      initialValue: value,
+      key: fieldKey ?? ValueKey('$label-$selectedValue'),
+      initialValue: selectedValue,
       isExpanded: true,
       itemHeight: 52,
       menuMaxHeight: 320,

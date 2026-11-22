@@ -81,7 +81,7 @@ void main() {
         amountUsdMinor: 100,
         exchangeRate: 1,
         rateDate: date,
-        category: 'Food',
+        category: 'Dining',
         description: id,
         date: date,
       );
@@ -125,7 +125,7 @@ void main() {
       amountUsdMinor: 100,
       exchangeRate: 1,
       rateDate: date,
-      category: 'Food',
+      category: 'Dining',
       description: id,
       date: date,
     );

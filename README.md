@@ -39,7 +39,8 @@ setting or device flow has been manually verified.
 
 - Add, edit, delete, and review expenses.
 - Amount, currency, category, purchase date, and optional description fields.
-- Fixed categories: Food, Shopping, Transportation, Entertainment, Travel, Bills, Other.
+- Fixed categories: Housing, Groceries, Dining, Transportation, Bills,
+  Subscriptions, Shopping, Entertainment, Travel, Health, Education, and Other.
 - Category filtering, newest-first ordering, and loading/error/empty states.
 - Swipe-to-delete with confirmation and undo; tap a purchase to edit it.
 - Compact expense rows grouped by US-formatted purchase date, with category icons and
@@ -233,7 +234,7 @@ edits to the same expense currently use last-write-wins behavior.
 
 ## Testing and validation
 
-Latest recorded checks: **63 Flutter tests passed**, `flutter analyze` reported no
+Latest recorded checks: **65 Flutter tests passed**, `flutter analyze` reported no
 issues, and the iOS property-list files passed syntax validation. The Firestore rule
 smoke tests passed in local emulators. These checks do not replace manual
 Google OAuth or live-device testing.

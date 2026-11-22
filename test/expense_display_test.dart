@@ -30,7 +30,7 @@ void main() {
                       amountUsdMinor: 1100,
                       exchangeRate: 1.1,
                       rateDate: DateTime(2026, 11, 13),
-                      category: 'Food',
+                      category: 'Dining',
                       description: 'Lunch',
                       date: DateTime(2026, 11, 14),
                     ),

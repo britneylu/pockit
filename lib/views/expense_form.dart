@@ -43,7 +43,8 @@ class _ExpenseFormState extends State<ExpenseForm> {
         expense?.currency ??
         widget.initialCurrency ??
         context.read<BudgetViewModel>().state.preferredCurrency;
-    _category = expense?.category ?? expenseCategories.first;
+    // normalize old food expenses before opening the category menu
+    _category = normalizeExpenseCategory(expense?.category ?? 'Dining');
     _date = expense?.date ?? DateUtils.dateOnly(DateTime.now());
     _amount = TextEditingController(
       text: expense == null

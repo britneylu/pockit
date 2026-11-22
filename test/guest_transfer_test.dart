@@ -17,7 +17,7 @@ Expense purchase() => Expense(
   amountUsdMinor: 1000,
   exchangeRate: 0.006667,
   rateDate: DateTime(2026),
-  category: 'Food',
+  category: 'Dining',
   description: 'Guest lunch',
   date: DateTime(2026),
 );

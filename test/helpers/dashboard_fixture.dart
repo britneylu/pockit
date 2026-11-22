@@ -22,7 +22,7 @@ Expense summaryExpense(
   DateTime date,
   int usdMinor, {
   Currency currency = Currency.usd,
-  String category = 'Food',
+  String category = 'Dining',
 }) => Expense(
   id: id,
   amountMinor: 1500,

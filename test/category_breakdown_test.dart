@@ -14,7 +14,7 @@ void main() {
             body: CategoryBreakdown(
               categories: [
                 CategorySpending(
-                  category: 'Food',
+                  category: 'Dining',
                   amountUsdMinor: 7500,
                   expenseCount: 2,
                   share: 0.75,
@@ -30,13 +30,13 @@ void main() {
           ),
         ),
       );
-      expect(find.text('Food'), findsOneWidget);
+      expect(find.text('Dining'), findsOneWidget);
       expect(find.text('75.00 USD'), findsOneWidget);
       expect(find.text('75.0% of spending · 2 expenses'), findsOneWidget);
       expect(find.text('25.0% of spending · 1 expense'), findsOneWidget);
       expect(
         find.bySemanticsLabel(
-          'Food, 75.00 USD, 75.0 percent of spending, 2 expenses',
+          'Dining, 75.00 USD, 75.0 percent of spending, 2 expenses',
         ),
         findsOneWidget,
       );

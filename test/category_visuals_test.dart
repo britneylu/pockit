@@ -5,9 +5,23 @@ import 'package:pockit/models/category_spending.dart';
 import 'package:pockit/models/currency.dart';
 import 'package:pockit/models/expense.dart';
 import 'package:pockit/widgets/category_breakdown.dart';
+import 'package:pockit/widgets/category_dropdown.dart';
 import 'package:pockit/widgets/expense_list_item.dart';
 
 void main() {
+  testWidgets('legacy food selection appears as dining', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: CategoryDropdown(value: 'Food', onChanged: (_) {}),
+        ),
+      ),
+    );
+
+    expect(find.text('Dining'), findsOneWidget);
+    expect(find.text('Food'), findsNothing);
+  });
+
   test('every supported category has a distinct stable color', () {
     expect(
       expenseCategories
@@ -30,7 +44,7 @@ void main() {
                   const CategoryBreakdown(
                     categories: [
                       CategorySpending(
-                        category: 'Food',
+                        category: 'Dining',
                         amountUsdMinor: 7500,
                         expenseCount: 2,
                         share: 0.75,
@@ -51,7 +65,7 @@ void main() {
                       amountUsdMinor: 7500,
                       exchangeRate: 1,
                       rateDate: DateTime(2026),
-                      category: 'Food',
+                      category: 'Dining',
                       description: 'Lunch',
                       date: DateTime(2026),
                     ),
@@ -65,11 +79,11 @@ void main() {
       expect(find.byKey(const Key('categoryDonut')), findsOneWidget);
       expect(find.text('100.00'), findsOneWidget);
       final dot = tester.widget<Container>(
-        find.byKey(const ValueKey('categoryColor-Food')),
+        find.byKey(const ValueKey('categoryColor-Dining')),
       );
       expect(
         (dot.decoration as BoxDecoration).color,
-        CategoryStyle.color('Food'),
+        CategoryStyle.color('Dining'),
       );
       expect(
         find.descendant(
@@ -79,7 +93,7 @@ void main() {
         findsNothing,
       );
       final icon = tester.widget<Icon>(find.byIcon(Icons.restaurant_outlined));
-      expect(icon.color, CategoryStyle.color('Food'));
+      expect(icon.color, CategoryStyle.color('Dining'));
     },
   );
   testWidgets('empty and rounded zero totals show a neutral ring', (
@@ -99,7 +113,7 @@ void main() {
           body: CategoryBreakdown(
             categories: [
               CategorySpending(
-                category: 'Food',
+                category: 'Dining',
                 amountUsdMinor: 0,
                 expenseCount: 1,
                 share: 0,

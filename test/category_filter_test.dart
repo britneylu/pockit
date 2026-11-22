@@ -19,7 +19,7 @@ void main() {
             body: CategoryDonut(
               categories: const [
                 CategorySpending(
-                  category: 'Food',
+                  category: 'Dining',
                   amountUsdMinor: 7500,
                   expenseCount: 2,
                   share: 0.75,
@@ -40,7 +40,7 @@ void main() {
       final origin = tester.getTopLeft(chart);
       final size = tester.getSize(chart);
       await tester.tapAt(origin + Offset(size.width * 0.94, size.height * 0.5));
-      expect(selections.last, 'Food');
+      expect(selections.last, 'Dining');
       await tester.tapAt(
         origin + Offset(size.width * 0.185, size.height * 0.185),
       );
@@ -83,12 +83,12 @@ void main() {
       );
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
-        find.byKey(const ValueKey('categoryFilter-Food')),
+        find.byKey(const ValueKey('categoryFilter-Dining')),
         150,
         scrollable: find.byType(Scrollable).first,
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('categoryFilter-Food')));
+      await tester.tap(find.byKey(const ValueKey('categoryFilter-Dining')));
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
         find.byKey(const Key('monthlyExpenseListTitle')),
@@ -96,7 +96,7 @@ void main() {
         scrollable: find.byType(Scrollable).first,
       );
       await tester.pumpAndSettle();
-      expect(find.text('Food expenses'), findsOneWidget);
+      expect(find.text('Dining expenses'), findsOneWidget);
       expect(find.byKey(const ValueKey('categoryFilter-Travel')), findsNothing);
       expect(
         find.descendant(
@@ -122,7 +122,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('monthlyExpense-train')), findsNothing);
       expect(find.text('This month’s expenses'), findsNothing);
-      expect(find.byKey(const ValueKey('categoryFilter-Food')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('categoryFilter-Dining')),
+        findsOneWidget,
+      );
       expect(fixture.model.state.spentMinor, 6000);
     },
   );

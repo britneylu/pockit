@@ -29,7 +29,7 @@ void main() {
       expect(fixture.model.state.spentMinor, 3450);
       expect(fixture.model.state.expenseCount, 2);
       expect(fixture.model.state.remainingMinor, 6550);
-      fixture.expenses.setFilter('Food');
+      fixture.expenses.setFilter('Dining');
       expect(fixture.model.state.spentMinor, 3450);
       fixture.model.previousMonth();
       expect(fixture.model.state.spentMinor, 9000);
@@ -135,7 +135,7 @@ void main() {
       addTearDown(fixture.dispose);
       final categories = fixture.model.state.categories;
       expect(categories.map((item) => item.category), [
-        'Food',
+        'Dining',
         'Travel',
         'Shopping',
       ]);
@@ -190,7 +190,7 @@ void main() {
       ],
     );
     addTearDown(fixture.dispose);
-    fixture.model.selectCategory('Food');
+    fixture.model.selectCategory('Dining');
     expect(fixture.model.state.visibleExpenses.map((e) => e.id), [
       'food newer',
       'food older',
@@ -202,7 +202,7 @@ void main() {
       () => fixture.model.state.visibleExpenses.clear(),
       throwsUnsupportedError,
     );
-    fixture.model.selectCategory('Food');
+    fixture.model.selectCategory('Dining');
     expect(fixture.model.state.visibleExpenses.length, 3);
     fixture.model.selectCategory('Travel');
     fixture.repository.remoteUpdate([

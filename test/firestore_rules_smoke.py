@@ -44,7 +44,7 @@ fields = {
     'exchangeRate': {'doubleValue': 0.006667},
     'rateDate': {'timestampValue': '2026-01-01T00:00:00Z'},
     'expenseDate': {'timestampValue': '2026-01-01T00:00:00Z'},
-    'category': {'stringValue': 'Food'},
+    'category': {'stringValue': 'Dining'},
     'description': {'stringValue': 'Lunch'},
 }
 
@@ -64,6 +64,7 @@ write(other_token, fields, 403)
 write(None, fields, 403)
 write(token, {**fields, 'amountMinor': {'integerValue': '-1'}}, 403)
 write(token, {**fields, 'currency': {'stringValue': 'INVALID'}}, 403)
+write(token, {**fields, 'category': {'stringValue': 'Food'}}, 403)
 write(token, {**fields, 'description': {'stringValue': 'x' * 201}}, 403)
 write(token, {**fields, 'unexpected': {'stringValue': 'no'}}, 403)
 write(token, {**fields, 'description': {'stringValue': 'Updated lunch'}})

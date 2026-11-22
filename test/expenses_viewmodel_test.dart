@@ -41,7 +41,7 @@ void main() {
         await model.saveExpense(
           amount: '1500',
           currency: Currency.jpy,
-          category: 'Food',
+          category: 'Dining',
           description: 'Lunch',
           date: date,
         ),
@@ -89,7 +89,7 @@ void main() {
         isTrue,
       );
       final saved = model.state.expenses.single;
-      model.setFilter('Food');
+      model.setFilter('Dining');
       expect(model.state.visible, isEmpty);
       expect(await model.delete(saved), isTrue);
       expect(model.state.expenses, isEmpty);
@@ -111,7 +111,7 @@ void main() {
       await model.saveExpense(
         amount: '12.00',
         currency: Currency.usd,
-        category: 'Food',
+        category: 'Dining',
         description: '',
         date: DateTime(2026),
       );
@@ -139,7 +139,7 @@ void main() {
         amountUsdMinor: 100,
         exchangeRate: 1,
         rateDate: DateTime(2026),
-        category: 'Food',
+        category: 'Dining',
         description: 'Other device',
         date: DateTime(2026),
       );
@@ -165,8 +165,8 @@ void main() {
       date: date,
     );
     final values = [
-      expense('older', DateTime(2026, 11, 13), 'Food'),
-      expense('morning', DateTime(2026, 11, 14, 8), 'Food'),
+      expense('older', DateTime(2026, 11, 13), 'Dining'),
+      expense('morning', DateTime(2026, 11, 14, 8), 'Dining'),
       expense('evening', DateTime(2026, 11, 14, 20), 'Shopping'),
     ];
     final groups = ExpensesState(
@@ -208,7 +208,7 @@ void main() {
       amountUsdMinor: 100,
       exchangeRate: 1,
       rateDate: date,
-      category: 'Food',
+      category: 'Dining',
       description: id,
       date: date,
     );

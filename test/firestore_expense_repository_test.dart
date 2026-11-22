@@ -15,7 +15,7 @@ void main() {
         amountUsdMinor: 1000,
         exchangeRate: 0.006667,
         rateDate: DateTime(2026, 11, 3),
-        category: 'Food',
+        category: 'Dining',
         description: 'Lunch',
         date: DateTime(2026, 11, 4),
       );
@@ -25,6 +25,12 @@ void main() {
       expect(fields.containsKey('id'), isFalse);
       final decoded = FirestoreExpenseRepository.decode(original.id, fields);
       expect(decoded.toJson(), original.toJson());
+      final migrated = FirestoreExpenseRepository.decode('legacy', {
+        ...fields,
+        'category': 'Food',
+      });
+      expect(migrated.category, 'Dining');
+      expect(migrated.toJson()['category'], 'Dining');
     },
   );
 }

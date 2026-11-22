@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/expense.dart';
@@ -36,10 +38,32 @@ class FirestoreExpenseRepository implements ExpenseRepository {
       });
   @override
   // turn live firestore snapshots into expense lists
-  Stream<List<Expense>> watch() => _collection.snapshots().map(
-    (snapshot) =>
-        snapshot.docs.map((doc) => decode(doc.id, doc.data())).toList(),
-  );
+  Stream<List<Expense>> watch() => _collection.snapshots().map((snapshot) {
+    final legacy = snapshot.docs
+        .where((doc) => doc.data()['category'] == 'Food')
+        .toList();
+    if (legacy.isNotEmpty) unawaited(_migrateFood(legacy));
+    return snapshot.docs.map((doc) => decode(doc.id, doc.data())).toList();
+  });
+
+  // update legacy cloud records after displaying them as dining
+  Future<void> _migrateFood(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> documents,
+  ) async {
+    try {
+      await Future.wait(
+        documents.map(
+          (doc) => doc.reference.update({
+            'category': 'Dining',
+            'updatedAt': FieldValue.serverTimestamp(),
+          }),
+        ),
+      );
+    } on FirebaseException {
+      // keep the local normalized value when migration must retry later
+    }
+  }
+
   @override
   // write one document without replacing other expenses
   Future<void> upsert(Expense expense) =>
