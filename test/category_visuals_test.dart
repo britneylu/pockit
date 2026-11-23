@@ -30,7 +30,8 @@ void main() {
           .length,
       expenseCategories.length,
     );
-    expect(CategoryStyle.color('unknown'), CategoryStyle.color('Other'));
+    expect(CategoryStyle.color('Pets'), isNot(CategoryStyle.color('Other')));
+    expect(CategoryStyle.icon('Pets'), Icons.label_outline);
   });
   testWidgets(
     'ring shows spending without a budget and card accents match its legend',

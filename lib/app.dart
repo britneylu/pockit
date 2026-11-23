@@ -102,6 +102,9 @@ class _AccountWorkspace extends StatelessWidget {
                 ? context.read<GuestTransferViewModel>().guestRepository
                 : repositoryFactory(account.id),
             currencyService,
+            // read the latest account categories during validation
+            customCategories: () =>
+                context.read<BudgetViewModel>().state.customCategories,
           )..load(),
         ),
         ChangeNotifierProvider(

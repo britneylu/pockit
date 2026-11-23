@@ -226,4 +226,27 @@ void main() {
     model.nextMonth();
     expect(model.state.visible.single.id, 'current');
   });
+
+  test('account custom category can be saved', () async {
+    final repo = MemoryExpenseRepository();
+    final model = ExpensesViewModel(
+      repo,
+      RateService(),
+      customCategories: () => const ['Pets'],
+    );
+    addTearDown(model.dispose);
+    await model.load();
+
+    expect(
+      await model.saveExpense(
+        amount: '25',
+        currency: Currency.usd,
+        category: 'Pets',
+        description: 'Vet supplies',
+        date: DateTime(2026, 11, 1),
+      ),
+      isTrue,
+    );
+    expect(model.state.expenses.single.category, 'Pets');
+  });
 }

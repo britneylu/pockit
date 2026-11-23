@@ -5,6 +5,7 @@ import '../core/date_format.dart';
 import '../core/money.dart';
 import '../models/expense.dart';
 import '../viewmodels/expenses_viewmodel.dart';
+import '../viewmodels/budget_viewmodel.dart';
 import 'expense_form.dart';
 import '../widgets/category_dropdown.dart';
 import '../widgets/expense_list_item.dart';
@@ -68,6 +69,11 @@ class ExpensesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final model = context.watch<ExpensesViewModel>();
+    // rebuild the filter when account categories change
+    final customCategories = context
+        .watch<BudgetViewModel>()
+        .state
+        .customCategories;
     // read the current expense list and loading status
     final state = model.state;
     return ListView(
@@ -93,6 +99,11 @@ class ExpensesScreen extends StatelessWidget {
         CategoryDropdown(
           value: state.filter ?? CategoryDropdown.allCategories,
           includeAll: true,
+          // keep categories from older expenses available as filters
+          additionalCategories: {
+            ...customCategories,
+            ...state.expenses.map((expense) => expense.category),
+          }.toList(),
           onChanged: (value) => model.setFilter(
             value == CategoryDropdown.allCategories ? null : value,
           ),

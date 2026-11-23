@@ -14,8 +14,19 @@ abstract final class CategoryStyle {
     'Travel' => Icons.flight_outlined,
     'Health' => Icons.medical_services_outlined,
     'Education' => Icons.school_outlined,
-    _ => Icons.payments_outlined,
+    'Other' => Icons.payments_outlined,
+    _ => Icons.label_outline,
   };
+
+  // keep custom category colors within the app palette
+  static const _customColors = [
+    Color(0xFF5A786F),
+    Color(0xFF6A6F98),
+    Color(0xFFA36B55),
+    Color(0xFF7D6B8D),
+    Color(0xFF71824E),
+    Color(0xFF4F7485),
+  ];
 
   static Color color(String category) => switch (category) {
     'Housing' => const Color(0xFF5F7166),
@@ -29,7 +40,11 @@ abstract final class CategoryStyle {
     'Travel' => const Color(0xFF74813C),
     'Health' => const Color(0xFFB45F76),
     'Education' => const Color(0xFF3F7B78),
-    _ => const Color(0xFF727F79),
+    'Other' => const Color(0xFF727F79),
+    // give each custom name a stable color
+    _ =>
+      _customColors[category.codeUnits.fold(0, (sum, value) => sum + value) %
+          _customColors.length],
   };
 
   static Color tint(String category, {double strength = 0.08}) =>

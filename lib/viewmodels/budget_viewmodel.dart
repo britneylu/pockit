@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../core/money.dart';
 import '../models/currency.dart';
+import '../models/expense.dart';
 import '../repositories/budget_repository.dart';
 import 'auth_viewmodel.dart';
 
@@ -19,14 +20,20 @@ class BudgetState {
     this.saving = false,
     this._currencyLoading = true,
     this._currencySaving = false,
+    this._customCategories = const [],
+    this._categoryLoading = true,
+    this._categorySaving = false,
     this.transferring = false,
     this.loadError,
     this.saveError,
     this.currencyLoadError,
     this.currencySaveError,
+    this.categoryLoadError,
+    this.categorySaveError,
     this.transferError,
     this.message,
     this.currencyMessage,
+    this.categoryMessage,
   });
   // budget fields use their own loading and saving status
   final int? amountMinor;
@@ -36,18 +43,28 @@ class BudgetState {
   // currency fields load and save independently from the budget
   final bool? _currencyLoading;
   final bool? _currencySaving;
+  // category fields load and save independently from other settings
+  final List<String>? _customCategories;
+  final bool? _categoryLoading;
+  final bool? _categorySaving;
   final bool transferring;
   final String? loadError;
   final String? saveError;
   final String? currencyLoadError;
   final String? currencySaveError;
+  final String? categoryLoadError;
+  final String? categorySaveError;
   final String? transferError;
   final String? message;
   final String? currencyMessage;
+  final String? categoryMessage;
   // recover older state objects that remain alive after hot reload
   Currency get preferredCurrency => _preferredCurrency ?? Currency.usd;
   bool get currencyLoading => _currencyLoading ?? true;
   bool get currencySaving => _currencySaving ?? false;
+  List<String> get customCategories => _customCategories ?? const [];
+  bool get categoryLoading => _categoryLoading ?? true;
+  bool get categorySaving => _categorySaving ?? false;
   // create a new snapshot while preserving unchanged values
   BudgetState copyWith({
     Object? amountMinor = _keep,
@@ -56,14 +73,20 @@ class BudgetState {
     bool? saving,
     bool? currencyLoading,
     bool? currencySaving,
+    List<String>? customCategories,
+    bool? categoryLoading,
+    bool? categorySaving,
     bool? transferring,
     Object? loadError = _keep,
     Object? saveError = _keep,
     Object? currencyLoadError = _keep,
     Object? currencySaveError = _keep,
+    Object? categoryLoadError = _keep,
+    Object? categorySaveError = _keep,
     Object? transferError = _keep,
     Object? message = _keep,
     Object? currencyMessage = _keep,
+    Object? categoryMessage = _keep,
   }) => BudgetState(
     amountMinor: identical(amountMinor, _keep)
         ? this.amountMinor
@@ -73,6 +96,9 @@ class BudgetState {
     saving: saving ?? this.saving,
     currencyLoading: currencyLoading ?? this.currencyLoading,
     currencySaving: currencySaving ?? this.currencySaving,
+    customCategories: customCategories ?? this.customCategories,
+    categoryLoading: categoryLoading ?? this.categoryLoading,
+    categorySaving: categorySaving ?? this.categorySaving,
     transferring: transferring ?? this.transferring,
     loadError: identical(loadError, _keep)
         ? this.loadError
@@ -86,6 +112,12 @@ class BudgetState {
     currencySaveError: identical(currencySaveError, _keep)
         ? this.currencySaveError
         : currencySaveError as String?,
+    categoryLoadError: identical(categoryLoadError, _keep)
+        ? this.categoryLoadError
+        : categoryLoadError as String?,
+    categorySaveError: identical(categorySaveError, _keep)
+        ? this.categorySaveError
+        : categorySaveError as String?,
     transferError: identical(transferError, _keep)
         ? this.transferError
         : transferError as String?,
@@ -93,6 +125,9 @@ class BudgetState {
     currencyMessage: identical(currencyMessage, _keep)
         ? this.currencyMessage
         : currencyMessage as String?,
+    categoryMessage: identical(categoryMessage, _keep)
+        ? this.categoryMessage
+        : categoryMessage as String?,
   );
 }
 
@@ -109,6 +144,7 @@ class BudgetViewModel extends ChangeNotifier {
   // keep budget and currency updates independent
   StreamSubscription<int?>? _subscription;
   StreamSubscription<Currency>? _currencySubscription;
+  StreamSubscription<List<String>>? _categorySubscription;
   late BudgetRepository _repository;
   BudgetState _state = const BudgetState();
   BudgetState get state => _state;
@@ -150,13 +186,16 @@ class BudgetViewModel extends ChangeNotifier {
     // ignore old events while cancellation finishes in the background
     unawaited(_subscription?.cancel());
     unawaited(_currencySubscription?.cancel());
+    unawaited(_categorySubscription?.cancel());
     if (_disposed || generation != _generation) return;
     _emit(
       _state.copyWith(
         loading: true,
         currencyLoading: true,
+        categoryLoading: true,
         loadError: null,
         currencyLoadError: null,
+        categoryLoadError: null,
       ),
     );
     // listen to monthly budget changes
@@ -196,6 +235,28 @@ class BudgetViewModel extends ChangeNotifier {
           _state.copyWith(
             currencyLoading: false,
             currencyLoadError: 'Couldn’t load your preferred currency. Check your connection and retry.',
+          ),
+        );
+      },
+    );
+    // listen to account-only custom categories
+    _categorySubscription = _repository.watchCustomCategories().listen(
+      (categories) {
+        if (_disposed || generation != _generation) return;
+        _emit(
+          _state.copyWith(
+            customCategories: List.unmodifiable(categories),
+            categoryLoading: false,
+            categoryLoadError: null,
+          ),
+        );
+      },
+      onError: (Object error) {
+        if (_disposed || generation != _generation) return;
+        _emit(
+          _state.copyWith(
+            categoryLoading: false,
+            categoryLoadError: 'Couldn’t load custom categories. Check your connection and retry.',
           ),
         );
       },
@@ -303,6 +364,87 @@ class BudgetViewModel extends ChangeNotifier {
     }
   }
 
+  // validate and add one account-only category
+  Future<bool> addCustomCategory(String input) async {
+    if (_userId == null || _state.categoryLoading || _state.categorySaving) {
+      return false;
+    }
+    final name = input.trim().replaceAll(RegExp(r'\s+'), ' ');
+    String? error;
+    if (name.length < 2) {
+      error = 'Use at least 2 characters.';
+    } else if (name.length > 24) {
+      error = 'Use 24 characters or fewer.';
+    } else if (_state.customCategories.length >= 10) {
+      error = 'You can add up to 10 custom categories.';
+    } else {
+      // compare names without case differences or legacy food labels
+      final compare = normalizeExpenseCategory(name).toLowerCase();
+      final names = [
+        ...expenseCategories,
+        ..._state.customCategories,
+      ].map((category) => category.toLowerCase());
+      if (names.contains(compare)) error = 'That category already exists.';
+    }
+    if (error != null) {
+      _emit(_state.copyWith(categorySaveError: error, categoryMessage: null));
+      return false;
+    }
+    return _saveCustomCategories([
+      ..._state.customCategories,
+      name,
+    ], message: 'Category added');
+  }
+
+  // remove the choice without changing existing expenses
+  Future<bool> removeCustomCategory(String category) => _saveCustomCategories(
+    _state.customCategories.where((value) => value != category).toList(),
+    message: 'Category removed',
+  );
+
+  Future<bool> _saveCustomCategories(
+    List<String> categories, {
+    required String message,
+  }) async {
+    if (_userId == null || _state.categoryLoading || _state.categorySaving) {
+      return false;
+    }
+    final generation = _generation;
+    final repository = _repository;
+    // keep controls disabled until firestore confirms the write
+    _emit(
+      _state.copyWith(
+        categorySaving: true,
+        categorySaveError: null,
+        categoryMessage: null,
+      ),
+    );
+    try {
+      await repository.saveCustomCategories(categories);
+      // ignore a save completed for an older account
+      if (_disposed || generation != _generation) return false;
+      _emit(
+        _state.copyWith(
+          customCategories: List.unmodifiable(categories),
+          categorySaving: false,
+          categoryMessage: message,
+        ),
+      );
+      return true;
+    } catch (_) {
+      if (!_disposed && generation == _generation) {
+        _emit(
+          _state.copyWith(
+            categorySaving: false,
+            categorySaveError:
+                'Couldn’t save categories. Check your connection and retry.',
+          ),
+        );
+      }
+      return false;
+    }
+  }
+
   Future<void> retryTransfer() async {
     final id = _userId;
     final amount = _pending[id];
@@ -343,6 +485,7 @@ class BudgetViewModel extends ChangeNotifier {
     _auth.removeListener(_accountChanged);
     _subscription?.cancel();
     _currencySubscription?.cancel();
+    _categorySubscription?.cancel();
     super.dispose();
   }
 }

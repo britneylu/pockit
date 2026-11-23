@@ -65,6 +65,7 @@ write(None, fields, 403)
 write(token, {**fields, 'amountMinor': {'integerValue': '-1'}}, 403)
 write(token, {**fields, 'currency': {'stringValue': 'INVALID'}}, 403)
 write(token, {**fields, 'category': {'stringValue': 'Food'}}, 403)
+write(token, {**fields, 'category': {'stringValue': 'Pets'}}, 403)
 write(token, {**fields, 'description': {'stringValue': 'x' * 201}}, 403)
 write(token, {**fields, 'unexpected': {'stringValue': 'no'}}, 403)
 write(token, {**fields, 'description': {'stringValue': 'Updated lunch'}})
@@ -99,6 +100,16 @@ preference_fields = {'preferredEntryCurrency': {'stringValue': 'JPY'},
                      'reportingCurrency': {'stringValue': 'USD'}}
 budget_write(token, preference_fields)
 budget_write(token, {**preference_fields, 'preferredEntryCurrency': {'stringValue': 'INVALID'}}, 403)
+# check account-only custom categories and expense validation
+custom_fields = {'customCategories': {'arrayValue': {'values': [
+                    {'stringValue': 'Pets'}, {'stringValue': 'Hobbies'}]}},
+                 'reportingCurrency': {'stringValue': 'USD'}}
+budget_write(token, custom_fields)
+write(token, {**fields, 'category': {'stringValue': 'Pets'}})
+request(base + ':commit', {'writes': [{'delete': name}]}, token)
+too_many = [{'stringValue': f'Category {index}'} for index in range(11)]
+budget_write(token, {**custom_fields,
+                     'customCategories': {'arrayValue': {'values': too_many}}}, 403)
 budget_write(token, {**budget_fields, 'monthlyBudgetMinor': {'integerValue': '130000'}})
 budget_write(token, {**budget_fields, 'preferredEntryCurrency': {'stringValue': 'CAD'}})
 print('Settings rules passed: owner access plus budget and preferred-currency validation')

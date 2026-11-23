@@ -138,7 +138,11 @@ class DashboardViewModel extends ChangeNotifier {
 
   // selecting the same category again restores the full monthly list
   void selectCategory(String? category) {
-    if (category != null && !expenseCategories.contains(category)) return;
+    // allow built in and custom categories shown in the chart
+    if (category != null &&
+        !_state.categories.any((item) => item.category == category)) {
+      return;
+    }
     _selectedCategory = _selectedCategory == category ? null : category;
     _refresh();
   }

@@ -30,6 +30,12 @@ class TestBudgetRepository extends MemoryBudgetRepository {
     if (failWrite) throw Exception('save failed');
     await super.savePreferredCurrency(currency);
   }
+
+  @override
+  Future<void> saveCustomCategories(List<String> categories) async {
+    if (failWrite) throw Exception('save failed');
+    await super.saveCustomCategories(categories);
+  }
 }
 
 void main() {
@@ -145,5 +151,23 @@ void main() {
     expect(await model.savePreferredCurrency(Currency.eur), isFalse);
     expect(model.state.preferredCurrency, Currency.jpy);
     expect(model.state.currencySaveError, isNotNull);
+  });
+
+  test('custom categories validate persist and delete', () async {
+    final auth = AuthViewModel(FakeAuthService());
+    final repo = TestBudgetRepository();
+    final model = BudgetViewModel(auth, (_) => repo);
+    addTearDown(auth.dispose);
+    addTearDown(model.dispose);
+    await flush();
+
+    expect(await model.addCustomCategory('Pets'), isTrue);
+    expect(model.state.customCategories, ['Pets']);
+    expect(repo.customCategories, ['Pets']);
+    expect(await model.addCustomCategory(' pets '), isFalse);
+    expect(model.state.categorySaveError, 'That category already exists.');
+    expect(await model.addCustomCategory('Food'), isFalse);
+    expect(await model.removeCustomCategory('Pets'), isTrue);
+    expect(model.state.customCategories, isEmpty);
   });
 }

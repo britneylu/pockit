@@ -77,9 +77,15 @@ class ExpensesState {
 
 // coordinate expense validation conversion and storage
 class ExpensesViewModel extends ChangeNotifier {
-  ExpensesViewModel(this._repository, this._currencyService);
+  ExpensesViewModel(
+    this._repository,
+    this._currencyService, {
+    List<String> Function()? customCategories,
+  }) : _customCategories = customCategories ?? (() => const []);
   final ExpenseRepository _repository;
   final CurrencyService _currencyService;
+  // read current categories without rebuilding the expense model
+  final List<String> Function() _customCategories;
   ExpensesState _state = ExpensesState(loading: true);
   StreamSubscription<List<Expense>>? _subscription;
   int _generation = 0;
@@ -195,7 +201,12 @@ class ExpensesViewModel extends ChangeNotifier {
     _emit(saving: true);
     try {
       final minor = parseMinor(amount, currency);
-      if (!expenseCategories.contains(category)) {
+      // keep removed custom categories valid on their original expenses
+      final allowed =
+          expenseCategories.contains(category) ||
+          _customCategories().contains(category) ||
+          original?.category == category;
+      if (!allowed) {
         throw const FormatException('Choose a category.');
       }
       final today = DateTime.now();

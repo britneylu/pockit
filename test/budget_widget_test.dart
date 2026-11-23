@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pockit/app.dart';
 import 'package:pockit/models/currency.dart';
 import 'package:pockit/repositories/budget_repository.dart';
+import 'package:pockit/widgets/category_dropdown.dart';
 
 import 'helpers/fake_auth_service.dart';
 import 'helpers/memory_expense_repository.dart';
@@ -105,5 +106,49 @@ void main() {
       find.byKey(const Key('expenseCurrency')),
     );
     expect(field.initialValue, Currency.eur);
+  });
+
+  testWidgets('account custom category appears in new expense form', (
+    tester,
+  ) async {
+    final repo = MemoryBudgetRepository();
+    await tester.pumpWidget(
+      PockitApp(
+        authService: FakeAuthService(),
+        expenseRepositoryFactory: (_) => MemoryExpenseRepository(),
+        budgetRepositoryFactory: (_) => repo,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    await reveal(tester, find.byKey(const Key('customCategoryName')));
+    await tester.enterText(find.byKey(const Key('customCategoryName')), 'Pets');
+    await tester.tap(find.byTooltip('Add category'));
+    await tester.pumpAndSettle();
+    expect(repo.customCategories, ['Pets']);
+    expect(find.text('Pets'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Add expense'));
+    await tester.pumpAndSettle();
+    final categoryField = tester.widget<CategoryDropdown>(
+      find.byType(CategoryDropdown),
+    );
+    expect(categoryField.additionalCategories, contains('Pets'));
+  });
+
+  testWidgets('guest settings hide custom categories', (tester) async {
+    await tester.pumpWidget(
+      PockitApp(
+        authService: FakeAuthService(account: null),
+        expenseRepositoryFactory: (_) => MemoryExpenseRepository(),
+        budgetRepositoryFactory: (_) => MemoryBudgetRepository(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Custom categories'), findsNothing);
   });
 }

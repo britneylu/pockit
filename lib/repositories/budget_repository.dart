@@ -10,10 +10,14 @@ abstract interface class BudgetRepository {
   Stream<int?> watch();
   // stream the default currency for new expenses
   Stream<Currency> watchPreferredCurrency();
+  // stream account-only custom expense categories
+  Stream<List<String>> watchCustomCategories();
   // save the budget without replacing other settings
   Future<void> save(int amountMinor);
   // save the currency without replacing the budget
   Future<void> savePreferredCurrency(Currency currency);
+  // save custom categories without replacing other settings
+  Future<void> saveCustomCategories(List<String> categories);
   // import a guest budget only when no account budget exists
   Future<int> saveIfUnset(int amountMinor);
 }
@@ -45,6 +49,15 @@ class FirestoreBudgetRepository implements BudgetRepository {
         return Currency.usd;
       });
 
+  @override
+  // use an empty list for older settings documents
+  Stream<List<String>> watchCustomCategories() =>
+      _document.snapshots().map((snapshot) {
+        final values = snapshot.data()?['customCategories'];
+        if (values is! List) return const [];
+        return values.whereType<String>().toList(growable: false);
+      });
+
   Map<String, dynamic> _fields(int amountMinor) => {
     'monthlyBudgetMinor': amountMinor,
     'reportingCurrency': 'USD',
@@ -58,6 +71,13 @@ class FirestoreBudgetRepository implements BudgetRepository {
   // merge the preference without replacing the saved budget
   Future<void> savePreferredCurrency(Currency currency) => _document.set({
     'preferredEntryCurrency': currency.code,
+    'reportingCurrency': 'USD',
+    'updatedAt': FieldValue.serverTimestamp(),
+  }, SetOptions(merge: true));
+
+  @override
+  Future<void> saveCustomCategories(List<String> categories) => _document.set({
+    'customCategories': categories,
     'reportingCurrency': 'USD',
     'updatedAt': FieldValue.serverTimestamp(),
   }, SetOptions(merge: true));
@@ -83,8 +103,10 @@ class MemoryBudgetRepository implements BudgetRepository {
   // keep guest values only for the current app session
   int? amountMinor;
   Currency preferredCurrency = Currency.usd;
+  List<String> customCategories = const [];
   final _listeners = <MultiStreamController<int?>>{};
   final _currencyListeners = <MultiStreamController<Currency>>{};
+  final _categoryListeners = <MultiStreamController<List<String>>>{};
   @override
   // send the current guest budget to each new listener
   Stream<int?> watch() => Stream.multi((listener) {
@@ -114,6 +136,23 @@ class MemoryBudgetRepository implements BudgetRepository {
     preferredCurrency = currency;
     for (final listener in _currencyListeners) {
       listener.add(currency);
+    }
+  }
+
+  @override
+  // send the current category list to each new listener
+  Stream<List<String>> watchCustomCategories() => Stream.multi((listener) {
+    _categoryListeners.add(listener);
+    listener.add(customCategories);
+    listener.onCancel = () => _categoryListeners.remove(listener);
+  });
+
+  @override
+  // notify open screens after an in memory update
+  Future<void> saveCustomCategories(List<String> categories) async {
+    customCategories = List.unmodifiable(categories);
+    for (final listener in _categoryListeners) {
+      listener.add(customCategories);
     }
   }
 

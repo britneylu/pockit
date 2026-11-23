@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../viewmodels/auth_viewmodel.dart';
 import '../widgets/budget_settings_card.dart';
+import '../widgets/custom_categories_card.dart';
 import '../widgets/preferred_currency_card.dart';
 
 // show budget and default currency settings
@@ -44,7 +45,8 @@ class SettingsScreen extends StatelessWidget {
         const BudgetSettingsCard(guest: false),
         // save signed in preferences to firestore
         const PreferredCurrencyCard(),
-        const SizedBox(height: 16),
+        // custom categories are available only for signed in accounts
+        const CustomCategoriesCard(),
         const Text('Pockit · Your money, wherever you go.'),
       ],
     );

@@ -89,6 +89,11 @@ class _ExpenseFormState extends State<ExpenseForm> {
   Widget build(BuildContext context) {
     // disable inputs while the expense is being saved
     final saving = context.watch<ExpensesViewModel>().state.saving;
+    // update the menu when account categories change
+    final customCategories = context
+        .watch<BudgetViewModel>()
+        .state
+        .customCategories;
     return PopScope(
       canPop: true,
       child: Scaffold(
@@ -136,6 +141,11 @@ class _ExpenseFormState extends State<ExpenseForm> {
                     CategoryDropdown(
                       fieldKey: const Key('expenseCategory'),
                       value: _category,
+                      // preserve a removed category while editing its expense
+                      additionalCategories: [
+                        ...customCategories,
+                        if (!expenseCategories.contains(_category)) _category,
+                      ],
                       onChanged: saving
                           ? null
                           : (value) => setState(() => _category = value),

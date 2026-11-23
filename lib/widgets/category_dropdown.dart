@@ -12,6 +12,7 @@ class CategoryDropdown extends StatelessWidget {
     this.label = 'Category',
     this.includeAll = false,
     this.fieldKey,
+    this.additionalCategories = const [],
   });
 
   static const allCategories = 'All categories';
@@ -21,10 +22,18 @@ class CategoryDropdown extends StatelessWidget {
   final String label;
   final bool includeAll;
   final Key? fieldKey;
+  final List<String> additionalCategories;
 
   @override
   Widget build(BuildContext context) {
-    final options = [if (includeAll) allCategories, ...expenseCategories];
+    final options = <String>[
+      if (includeAll) allCategories,
+      ...expenseCategories,
+    ];
+    // avoid duplicate values when editing a custom category
+    for (final category in additionalCategories) {
+      if (!options.contains(category)) options.add(category);
+    }
     // keep legacy food values valid during hot reload and migration
     final selectedValue = normalizeExpenseCategory(value);
     return DropdownButtonFormField<String>(
