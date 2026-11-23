@@ -37,7 +37,7 @@ Expense summaryExpense(
 
 class DashboardFixture {
   final repository = MemoryExpenseRepository();
-  final budgets = MemoryBudgetRepository();
+  late final MemoryBudgetRepository budgets;
   late AuthViewModel auth;
   late BudgetViewModel budget;
   late ExpensesViewModel expenses;
@@ -46,7 +46,11 @@ class DashboardFixture {
     List<Expense> values = const [],
     int? budgetMinor,
     bool expenseFailure = false,
+    bool budgetFailure = false,
   }) async {
+    budgets = budgetFailure
+        ? _FailingBudgetRepository()
+        : MemoryBudgetRepository();
     repository.expenses = values;
     repository.fail = expenseFailure;
     if (budgetMinor != null) await budgets.save(budgetMinor);
@@ -68,4 +72,18 @@ class DashboardFixture {
     budget.dispose();
     auth.dispose();
   }
+
+  // allow a failed budget retry to reconnect in tests
+  void allowBudgetReads() {
+    final repository = budgets;
+    if (repository is _FailingBudgetRepository) repository.fail = false;
+  }
+}
+
+class _FailingBudgetRepository extends MemoryBudgetRepository {
+  bool fail = true;
+
+  @override
+  Stream<int?> watch() =>
+      fail ? Stream.error(Exception('budget unavailable')) : super.watch();
 }

@@ -8,6 +8,16 @@ import 'package:pockit/widgets/category_dropdown.dart';
 import 'helpers/fake_auth_service.dart';
 import 'helpers/memory_expense_repository.dart';
 
+class _FailingCategoryRepository extends MemoryBudgetRepository {
+  bool failWrite = true;
+
+  @override
+  Future<void> saveCustomCategories(List<String> categories) async {
+    if (failWrite) throw Exception('save failed');
+    await super.saveCustomCategories(categories);
+  }
+}
+
 Future<void> reveal(WidgetTester tester, Finder finder) async {
   await tester.scrollUntilVisible(
     finder,
@@ -135,6 +145,31 @@ void main() {
       find.byType(CategoryDropdown),
     );
     expect(categoryField.additionalCategories, contains('Pets'));
+  });
+
+  testWidgets('custom category save errors remain retryable', (tester) async {
+    final repo = _FailingCategoryRepository();
+    await tester.pumpWidget(
+      PockitApp(
+        authService: FakeAuthService(),
+        expenseRepositoryFactory: (_) => MemoryExpenseRepository(),
+        budgetRepositoryFactory: (_) => repo,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    await reveal(tester, find.byKey(const Key('customCategoryName')));
+    await tester.enterText(find.byKey(const Key('customCategoryName')), 'Pets');
+    await tester.tap(find.byTooltip('Add category'));
+    await tester.pumpAndSettle();
+    expect(find.text('Retry saving categories'), findsOneWidget);
+
+    repo.failWrite = false;
+    await tester.tap(find.text('Retry saving categories'));
+    await tester.pumpAndSettle();
+    expect(repo.customCategories, ['Pets']);
+    expect(find.text('Pets'), findsOneWidget);
   });
 
   testWidgets('guest settings hide custom categories', (tester) async {

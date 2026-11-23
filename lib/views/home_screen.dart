@@ -130,6 +130,15 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (state.expenseCount == 0) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'No expenses this month',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ],
                 const Divider(height: 28),
                 if (state.budgetLoading)

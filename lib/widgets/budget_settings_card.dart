@@ -138,7 +138,7 @@ class _BudgetSettingsCardState extends State<BudgetSettingsCard> {
                   child: const Text('Retry budget transfer'),
                 ),
               ],
-              if (state.saveError != null)
+              if (state.saveError != null) ...[
                 Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: Semantics(
@@ -149,6 +149,14 @@ class _BudgetSettingsCardState extends State<BudgetSettingsCard> {
                     ),
                   ),
                 ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: disabled ? null : _save,
+                    child: const Text('Retry saving budget'),
+                  ),
+                ),
+              ],
               if (state.message != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 12),

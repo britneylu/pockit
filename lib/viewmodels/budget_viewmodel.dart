@@ -152,6 +152,8 @@ class BudgetViewModel extends ChangeNotifier {
   bool _attached = false;
   bool _disposed = false;
   int _generation = 0;
+  Currency? _pendingCurrency;
+  List<String>? _pendingCategories;
 
   void _emit(BudgetState value) {
     if (_disposed) return;
@@ -174,6 +176,9 @@ class BudgetViewModel extends ChangeNotifier {
     _repository = next == null
         ? MemoryBudgetRepository()
         : _repositoryFor(next);
+    // discard retries that belong to the previous account
+    _pendingCurrency = null;
+    _pendingCategories = null;
     _state = const BudgetState();
     // avoid publishing state while an ancestor is still rebuilding
     final generation = ++_generation;
@@ -329,6 +334,7 @@ class BudgetViewModel extends ChangeNotifier {
     }
     final generation = _generation;
     final repository = _repository;
+    _pendingCurrency = currency;
     // clear old feedback before starting the cloud write
     _emit(
       _state.copyWith(
@@ -350,6 +356,7 @@ class BudgetViewModel extends ChangeNotifier {
               : 'Preferred currency saved',
         ),
       );
+      _pendingCurrency = null;
       return true;
     } catch (_) {
       if (!_disposed && generation == _generation) {
@@ -362,6 +369,14 @@ class BudgetViewModel extends ChangeNotifier {
       }
       return false;
     }
+  }
+
+  // retry the last currency choice after a failed write
+  Future<bool> retryPreferredCurrency() {
+    final currency = _pendingCurrency;
+    return currency == null
+        ? Future.value(false)
+        : savePreferredCurrency(currency);
   }
 
   // validate and add one account-only category
@@ -411,6 +426,7 @@ class BudgetViewModel extends ChangeNotifier {
     }
     final generation = _generation;
     final repository = _repository;
+    _pendingCategories = List.unmodifiable(categories);
     // keep controls disabled until firestore confirms the write
     _emit(
       _state.copyWith(
@@ -430,6 +446,7 @@ class BudgetViewModel extends ChangeNotifier {
           categoryMessage: message,
         ),
       );
+      _pendingCategories = null;
       return true;
     } catch (_) {
       if (!_disposed && generation == _generation) {
@@ -443,6 +460,14 @@ class BudgetViewModel extends ChangeNotifier {
       }
       return false;
     }
+  }
+
+  // retry the last category change after a failed write
+  Future<bool> retryCustomCategories() {
+    final categories = _pendingCategories;
+    return categories == null
+        ? Future.value(false)
+        : _saveCustomCategories(categories, message: 'Categories saved');
   }
 
   Future<void> retryTransfer() async {

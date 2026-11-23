@@ -151,6 +151,9 @@ void main() {
     expect(await model.savePreferredCurrency(Currency.eur), isFalse);
     expect(model.state.preferredCurrency, Currency.jpy);
     expect(model.state.currencySaveError, isNotNull);
+    repo.failWrite = false;
+    expect(await model.retryPreferredCurrency(), isTrue);
+    expect(repo.preferredCurrency, Currency.eur);
   });
 
   test('custom categories validate persist and delete', () async {
@@ -169,5 +172,21 @@ void main() {
     expect(await model.addCustomCategory('Food'), isFalse);
     expect(await model.removeCustomCategory('Pets'), isTrue);
     expect(model.state.customCategories, isEmpty);
+  });
+
+  test('failed custom category writes can be retried', () async {
+    final auth = AuthViewModel(FakeAuthService());
+    final repo = TestBudgetRepository()..failWrite = true;
+    final model = BudgetViewModel(auth, (_) => repo);
+    addTearDown(auth.dispose);
+    addTearDown(model.dispose);
+    await flush();
+
+    expect(await model.addCustomCategory('Pets'), isFalse);
+    expect(model.state.categorySaveError, isNotNull);
+    expect(model.state.customCategories, isEmpty);
+    repo.failWrite = false;
+    expect(await model.retryCustomCategories(), isTrue);
+    expect(model.state.customCategories, ['Pets']);
   });
 }

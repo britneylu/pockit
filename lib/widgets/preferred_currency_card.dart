@@ -54,7 +54,7 @@ class PreferredCurrencyCard extends StatelessWidget {
                   semanticsLabel: 'Saving preferred currency',
                 ),
               ),
-            if (state.currencySaveError != null)
+            if (state.currencySaveError != null) ...[
               Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: Semantics(
@@ -65,6 +65,16 @@ class PreferredCurrencyCard extends StatelessWidget {
                   ),
                 ),
               ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: state.currencySaving
+                      ? null
+                      : model.retryPreferredCurrency,
+                  child: const Text('Retry saving currency'),
+                ),
+              ),
+            ],
           ],
         ),
       ),

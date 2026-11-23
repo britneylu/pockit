@@ -23,6 +23,14 @@ class _CustomCategoriesCardState extends State<CustomCategoriesCard> {
     if (success && mounted) _name.clear();
   }
 
+  // clear the failed entry after its retry succeeds
+  Future<void> _retry() async {
+    final success = await context
+        .read<BudgetViewModel>()
+        .retryCustomCategories();
+    if (success && mounted) _name.clear();
+  }
+
   @override
   void dispose() {
     _name.dispose();
@@ -108,7 +116,7 @@ class _CustomCategoriesCardState extends State<CustomCategoriesCard> {
                   semanticsLabel: 'Saving custom categories',
                 ),
               ),
-            if (state.categorySaveError != null)
+            if (state.categorySaveError != null) ...[
               Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: Text(
@@ -116,6 +124,14 @@ class _CustomCategoriesCardState extends State<CustomCategoriesCard> {
                   style: TextStyle(color: theme.colorScheme.error),
                 ),
               ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: state.categorySaving ? null : _retry,
+                  child: const Text('Retry saving categories'),
+                ),
+              ),
+            ],
           ],
         ),
       ),

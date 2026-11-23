@@ -78,6 +78,33 @@ void main() {
     await tester.tap(find.text('Set budget'));
     expect(openedSettings, isTrue);
     expect(find.byKey(const Key('monthlyRemaining')), findsNothing);
+    expect(find.text('No expenses this month'), findsOneWidget);
+  });
+  testWidgets('failed budget loads show a retry action', (tester) async {
+    final fixture = DashboardFixture();
+    await fixture.initialize(budgetFailure: true);
+    addTearDown(fixture.dispose);
+    await tester.pumpWidget(
+      ChangeNotifierProvider<DashboardViewModel>.value(
+        value: fixture.model,
+        child: MaterialApp(
+          home: Scaffold(
+            body: HomeScreen(
+              onExpenses: () {},
+              onSettings: () {},
+              onConvert: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Couldn’t load your budget.'), findsOneWidget);
+    expect(find.text('Retry budget'), findsOneWidget);
+    fixture.allowBudgetReads();
+    await tester.tap(find.text('Retry budget'));
+    await tester.pumpAndSettle();
+    expect(find.text('No monthly budget'), findsOneWidget);
   });
   testWidgets('failed spending loads show retry instead of a zero total', (
     tester,

@@ -103,7 +103,7 @@ setting or device flow has been manually verified.
 - [x] Add monthly budget editing to Settings.
 - [x] Add the preferred entry currency to Settings.
 - [x] Add account-only custom expense categories to Settings.
-- [ ] Expand loading, empty, and error coverage for budget/dashboard features.
+- [x] Expand loading, empty, and error coverage for budget/dashboard features.
 - [x] Create the final app icon and launch screen.
 - [ ] Check contrast, larger text, small screens, landscape, and screen-reader behavior.
 - [ ] Manually verify Google authentication, guest transfers, and cloud sync on target platforms.
@@ -237,7 +237,7 @@ edits to the same expense currently use last-write-wins behavior.
 
 ## Testing and validation
 
-Latest recorded checks: **69 Flutter tests passed**, `flutter analyze` reported no
+Latest recorded checks: **72 Flutter tests passed**, `flutter analyze` reported no
 issues, and the iOS property-list files passed syntax validation. The Firestore rule
 smoke tests passed in local emulators. These checks do not replace manual
 Google OAuth or live-device testing.
