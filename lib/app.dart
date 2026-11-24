@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import 'core/app_theme.dart';
+import 'l10n/app_localizations.dart';
 import 'repositories/budget_repository.dart';
 import 'viewmodels/budget_viewmodel.dart';
 import 'services/currency_service.dart';
@@ -20,6 +21,7 @@ import 'views/auth_screen.dart';
 import 'views/account_screen.dart';
 import 'views/settings_screen.dart';
 import 'viewmodels/expenses_viewmodel.dart';
+import 'viewmodels/locale_viewmodel.dart';
 
 // create a separate expense repository for each account
 typedef ExpenseRepositoryFactory = ExpenseRepository Function(String userId);
@@ -44,6 +46,8 @@ class PockitApp extends StatelessWidget {
       ChangeNotifierProvider(
         create: (_) => AuthViewModel(authService ?? FirebaseAuthService()),
       ),
+      // load the saved interface language for every account
+      ChangeNotifierProvider(create: (_) => LocaleViewModel()..load()),
       ChangeNotifierProvider(
         lazy: false,
         create: (context) => BudgetViewModel(
@@ -90,6 +94,8 @@ class _AccountWorkspace extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final account = context.read<AuthViewModel>().state.account;
+    // rebuild material app whenever the language changes
+    final locale = context.watch<LocaleViewModel>().locale;
     // use temporary guest storage or the signed in account repository
     return MultiProvider(
       providers: [
@@ -117,6 +123,13 @@ class _AccountWorkspace extends StatelessWidget {
       child: MaterialApp(
         title: 'Pockit',
         theme: appTheme,
+        locale: locale,
+        supportedLocales: AppLocalizations.supportedLocales,
+        // localize app text and built in flutter controls
+        localizationsDelegates: const [
+          AppLocalizationsDelegate(),
+          ...GlobalMaterialLocalizations.delegates,
+        ],
         debugShowCheckedModeBanner: false,
         home: const PockitShell(),
       ),
@@ -133,38 +146,6 @@ class PockitShell extends StatefulWidget {
 
 class _PockitShellState extends State<PockitShell> {
   int _index = 0;
-  static const _destinations = [
-    NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
-    NavigationDestination(
-      icon: Icon(Icons.receipt_long_outlined),
-      label: 'Expenses',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.currency_exchange),
-      label: 'Convert',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.settings_outlined),
-      label: 'Settings',
-    ),
-  ];
-  // leave the middle mobile slot for the global add action
-  static const _bottomDestinations = [
-    NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
-    NavigationDestination(
-      icon: Icon(Icons.receipt_long_outlined),
-      label: 'Expenses',
-    ),
-    NavigationDestination(icon: _AddNavigationIcon(), label: ''),
-    NavigationDestination(
-      icon: Icon(Icons.currency_exchange),
-      label: 'Convert',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.settings_outlined),
-      label: 'Settings',
-    ),
-  ];
   // change tabs and fetch the first converter rate when needed
   void _select(int value) {
     setState(() => _index = value);
@@ -198,6 +179,33 @@ class _PockitShellState extends State<PockitShell> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthViewModel>();
     final transfer = context.watch<GuestTransferViewModel>();
+    final text = context.l10n;
+    final destinations = [
+      NavigationDestination(
+        icon: const Icon(Icons.home_outlined),
+        label: text.text('home'),
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.receipt_long_outlined),
+        label: text.text('expenses'),
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.currency_exchange),
+        label: text.text('convert'),
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.settings_outlined),
+        label: text.text('settings'),
+      ),
+    ];
+    // leave the middle mobile slot for the global add action
+    final bottomDestinations = [
+      destinations[0],
+      destinations[1],
+      const NavigationDestination(icon: _AddNavigationIcon(), label: ''),
+      destinations[2],
+      destinations[3],
+    ];
     final content = SafeArea(
       child: Center(
         child: ConstrainedBox(
@@ -242,7 +250,7 @@ class _PockitShellState extends State<PockitShell> {
                             builder: (_) => const AuthScreen(),
                           ),
                         ),
-                  child: const Text('SIGN IN'),
+                  child: Text(text.text('signIn')),
                 )
               else
                 IconButton(
@@ -253,7 +261,7 @@ class _PockitShellState extends State<PockitShell> {
                       builder: (_) => const AccountScreen(),
                     ),
                   ),
-                  tooltip: 'Profile',
+                  tooltip: text.text('profile'),
                   icon: const Icon(Icons.account_circle_outlined),
                 ),
               const SizedBox(width: 8),
@@ -275,13 +283,15 @@ class _PockitShellState extends State<PockitShell> {
                       children: [
                         Text(
                           transfer.failed
-                              ? 'Couldn’t transfer guest expenses. Keep the app open and retry.'
-                              : 'Saving ${transfer.pendingCount} guest expenses to your account…',
+                              ? text.text('transferFailed')
+                              : text.text('transferSaving', {
+                                  'count': transfer.pendingCount,
+                                }),
                         ),
                         if (transfer.failed)
                           TextButton(
                             onPressed: transfer.retry,
-                            child: const Text('Retry transfer'),
+                            child: Text(text.text('retryTransfer')),
                           ),
                       ],
                     ),
@@ -299,7 +309,7 @@ class _PockitShellState extends State<PockitShell> {
                               padding: const EdgeInsets.only(bottom: 12),
                               child: FloatingActionButton.small(
                                 onPressed: _addExpense,
-                                tooltip: 'Add expense',
+                                tooltip: text.text('addExpense'),
                                 backgroundColor: Theme.of(context)
                                     .colorScheme
                                     .primary,
@@ -309,7 +319,7 @@ class _PockitShellState extends State<PockitShell> {
                                 child: const Icon(Icons.add),
                               ),
                             ),
-                            destinations: _destinations
+                            destinations: destinations
                                 .map(
                                   (d) => NavigationRailDestination(
                                     icon: d.icon,
@@ -331,7 +341,7 @@ class _PockitShellState extends State<PockitShell> {
               : NavigationBar(
                   selectedIndex: _bottomIndex,
                   onDestinationSelected: _selectBottom,
-                  destinations: _bottomDestinations,
+                  destinations: bottomDestinations,
                 ),
         );
       },
@@ -346,8 +356,9 @@ class _AddNavigationIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final text = context.l10n;
     return Tooltip(
-      message: 'Add expense',
+      message: text.text('addExpense'),
       child: Transform.translate(
         offset: const Offset(0, 8),
         child: Material(

@@ -5,6 +5,7 @@ import '../core/category_style.dart';
 import 'category_donut.dart';
 import '../models/category_spending.dart';
 import '../models/currency.dart';
+import '../l10n/app_localizations.dart';
 
 // compare category totals with labeled bars rather than color alone
 class CategoryBreakdown extends StatelessWidget {
@@ -23,6 +24,7 @@ class CategoryBreakdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final text = context.l10n;
     // replace category summaries with individual purchases when selected
     if (selectedCategory != null && selectedContent != null) {
       return Column(
@@ -39,12 +41,12 @@ class CategoryBreakdown extends StatelessWidget {
       );
     }
     if (categories.isEmpty) {
-      return const Column(
+      return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          CategoryDonut(categories: []),
-          SizedBox(height: 16),
-          Text('No expenses for this month yet.'),
+          const CategoryDonut(categories: []),
+          const SizedBox(height: 16),
+          Text(text.text('category.empty')),
         ],
       );
     }
@@ -119,7 +121,7 @@ class CategoryBreakdown extends StatelessWidget {
                                 const SizedBox(width: 8),
                                 Flexible(
                                   child: Text(
-                                    category.category,
+                                    text.category(category.category),
                                     style: theme.textTheme.titleSmall,
                                   ),
                                 ),

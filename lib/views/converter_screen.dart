@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
-import '../core/date_format.dart';
+import '../l10n/app_localizations.dart';
 import '../viewmodels/converter_viewmodel.dart';
 import '../widgets/currency_dropdown.dart';
 import 'expense_form.dart';
@@ -17,42 +17,49 @@ class ConverterScreen extends StatelessWidget {
     final state = model.state;
     final quote = state.quote;
     final result = state.result;
+    final text = context.l10n;
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
         Text(
-          'A world of possibilities.',
+          text.text('converter.title'),
           style: Theme.of(context).textTheme.headlineMedium,
         ),
         const SizedBox(height: 8),
-        const Text('Check a currency before your next adventure.'),
+        Text(text.text('converter.subtitle')),
         const SizedBox(height: 24),
         // send amount edits to the viewmodel for local calculation
         TextField(
           key: const Key('amount'),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(
-            labelText: 'Amount',
-            hintText: 'Enter an amount',
+            labelText: text.text('converter.amount'),
+            hintText: text.text('converter.amountHint'),
             suffixText: state.from.code,
-            errorText: state.amountError,
+            errorText: state.amountError == null
+                ? null
+                : text.message(state.amountError!),
           ),
           onChanged: model.setAmount,
         ),
         const SizedBox(height: 20),
         CurrencyDropdown(
-          label: 'From',
+          label: text.text('converter.from'),
           value: state.from,
           onChanged: model.setFrom,
         ),
         Center(
           child: IconButton.filledTonal(
             onPressed: model.swap,
-            tooltip: 'Swap currencies',
+            tooltip: text.text('converter.swap'),
             icon: const Icon(Icons.swap_vert),
           ),
         ),
-        CurrencyDropdown(label: 'To', value: state.to, onChanged: model.setTo),
+        CurrencyDropdown(
+          label: text.text('converter.to'),
+          value: state.to,
+          onChanged: model.setTo,
+        ),
         const SizedBox(height: 24),
         Card(
           child: Padding(
@@ -65,7 +72,7 @@ class ConverterScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        'Conversion',
+                        text.text('converter.conversion'),
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
@@ -73,7 +80,7 @@ class ConverterScreen extends StatelessWidget {
                       onPressed: state.status == ConversionStatus.loading
                           ? null
                           : model.refresh,
-                      tooltip: 'Refresh rate',
+                      tooltip: text.text('converter.refresh'),
                       icon: const Icon(Icons.refresh),
                     ),
                   ],
@@ -82,16 +89,19 @@ class ConverterScreen extends StatelessWidget {
                 // show loading error or result content for the current request
                 if (state.status == ConversionStatus.loading)
                   Semantics(
-                    label: 'Fetching exchange rate',
+                    label: text.text('converter.fetching'),
                     child: const LinearProgressIndicator(),
                   )
                 else if (state.status == ConversionStatus.error) ...[
-                  Semantics(liveRegion: true, child: Text(state.error!)),
+                  Semantics(
+                    liveRegion: true,
+                    child: Text(text.message(state.error!)),
+                  ),
                   const SizedBox(height: 12),
                   FilledButton.icon(
                     onPressed: model.refresh,
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
+                    label: Text(text.text('retry')),
                   ),
                 ] else ...[
                   if (result != null)
@@ -106,16 +116,16 @@ class ConverterScreen extends StatelessWidget {
                   else
                     Text(
                       state.amountError == null
-                          ? 'Enter an amount'
-                          : 'Check the amount above.',
+                          ? text.text('converter.enterAmount')
+                          : text.text('converter.checkAmount'),
                     ),
                   if (quote != null) ...[
                     const SizedBox(height: 10),
                     // combine the rate and date into one compact line
                     Text(
                       state.from == state.to
-                          ? 'No exchange needed'
-                          : '1 ${state.from.code} = ${quote.rate.toStringAsFixed(6)} ${state.to.code} · ${formatUsDate(quote.date)}',
+                          ? text.text('converter.noExchange')
+                          : '1 ${state.from.code} = ${quote.rate.toStringAsFixed(6)} ${state.to.code} · ${text.date(quote.date)}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -137,7 +147,7 @@ class ConverterScreen extends StatelessWidget {
                           ),
                         ),
                         icon: const Icon(Icons.add),
-                        label: const Text('Add as expense'),
+                        label: Text(text.text('converter.addExpense')),
                       ),
                     ),
                   ],
@@ -148,7 +158,7 @@ class ConverterScreen extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          'Frankfurter rates may vary from your bank.',
+          text.text('converter.note'),
           style: Theme.of(context).textTheme.bodySmall
               ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),

@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../core/category_style.dart';
+import '../l10n/app_localizations.dart';
 import '../viewmodels/budget_viewmodel.dart';
 
 // manage account-only categories without changing old expenses
@@ -42,6 +43,7 @@ class _CustomCategoriesCardState extends State<CustomCategoriesCard> {
     final model = context.watch<BudgetViewModel>();
     final state = model.state;
     final theme = Theme.of(context);
+    final text = context.l10n;
     // prevent edits while categories are loading or saving
     final disabled =
         state.categoryLoading ||
@@ -54,19 +56,22 @@ class _CustomCategoriesCardState extends State<CustomCategoriesCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Custom categories', style: theme.textTheme.titleLarge),
+            Text(
+              text.text('settings.customCategories'),
+              style: theme.textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
-            const Text('Add up to 10 categories.'),
+            Text(text.text('settings.categoryLimit')),
             const SizedBox(height: 16),
             if (state.categoryLoading)
-              const LinearProgressIndicator(
-                semanticsLabel: 'Loading custom categories',
+              LinearProgressIndicator(
+                semanticsLabel: text.text('settings.loadingCategories'),
               )
             else if (state.categoryLoadError != null) ...[
-              Text(state.categoryLoadError!),
+              Text(text.message(state.categoryLoadError!)),
               TextButton(
                 onPressed: model.reload,
-                child: const Text('Retry loading categories'),
+                child: Text(text.text('settings.retryCategoryLoad')),
               ),
             ] else ...[
               TextField(
@@ -76,17 +81,17 @@ class _CustomCategoriesCardState extends State<CustomCategoriesCard> {
                 maxLength: 24,
                 textCapitalization: TextCapitalization.words,
                 decoration: InputDecoration(
-                  labelText: 'Category name',
+                  labelText: text.text('settings.categoryName'),
                   suffixIcon: IconButton(
                     onPressed: disabled ? null : _add,
-                    tooltip: 'Add category',
+                    tooltip: text.text('settings.addCategory'),
                     icon: const Icon(Icons.add),
                   ),
                 ),
                 onSubmitted: disabled ? null : (_) => _add(),
               ),
               if (state.customCategories.isEmpty)
-                const Text('No custom categories yet.')
+                Text(text.text('settings.noCustomCategories'))
               else
                 // show saved categories as removable chips
                 Wrap(
@@ -104,23 +109,26 @@ class _CustomCategoriesCardState extends State<CustomCategoriesCard> {
                         onDeleted: state.categorySaving
                             ? null
                             : () => model.removeCustomCategory(category),
-                        deleteButtonTooltipMessage: 'Remove $category',
+                        deleteButtonTooltipMessage: text.text(
+                          'settings.removeCategory',
+                          {'category': category},
+                        ),
                       ),
                   ],
                 ),
             ],
             if (state.categorySaving)
-              const Padding(
-                padding: EdgeInsets.only(top: 8),
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
                 child: LinearProgressIndicator(
-                  semanticsLabel: 'Saving custom categories',
+                  semanticsLabel: text.text('settings.savingCategories'),
                 ),
               ),
             if (state.categorySaveError != null) ...[
               Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: Text(
-                  state.categorySaveError!,
+                  text.message(state.categorySaveError!),
                   style: TextStyle(color: theme.colorScheme.error),
                 ),
               ),
@@ -128,7 +136,7 @@ class _CustomCategoriesCardState extends State<CustomCategoriesCard> {
                 alignment: Alignment.centerLeft,
                 child: TextButton(
                   onPressed: state.categorySaving ? null : _retry,
-                  child: const Text('Retry saving categories'),
+                  child: Text(text.text('settings.retryCategorySave')),
                 ),
               ),
             ],

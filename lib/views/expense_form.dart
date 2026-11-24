@@ -1,8 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
-import '../core/date_format.dart';
 import '../core/money.dart';
+import '../l10n/app_localizations.dart';
 import '../models/currency.dart';
 import '../models/expense.dart';
 import '../viewmodels/budget_viewmodel.dart';
@@ -80,7 +80,8 @@ class _ExpenseFormState extends State<ExpenseForm> {
       Navigator.pop(context);
     } else {
       setState(
-        () => _error = model.lastSaveError ?? 'Couldn’t save. Please retry.',
+        () => _error =
+            model.lastSaveError ?? context.l10n.text('expenseForm.saveError'),
       );
     }
   }
@@ -94,11 +95,16 @@ class _ExpenseFormState extends State<ExpenseForm> {
         .watch<BudgetViewModel>()
         .state
         .customCategories;
+    final text = context.l10n;
     return PopScope(
       canPop: true,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.expense == null ? 'Add expense' : 'Edit expense'),
+          title: Text(
+            text.text(
+              widget.expense == null ? 'addExpense' : 'expenseForm.edit',
+            ),
+          ),
         ),
         body: SafeArea(
           child: Center(
@@ -116,8 +122,8 @@ class _ExpenseFormState extends State<ExpenseForm> {
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
-                      decoration: const InputDecoration(
-                        labelText: 'Expense amount',
+                      decoration: InputDecoration(
+                        labelText: text.text('expenseForm.amount'),
                       ),
                       validator: (value) {
                         try {
@@ -131,7 +137,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
                     const SizedBox(height: 16),
                     CurrencyDropdown(
                       fieldKey: const Key('expenseCurrency'),
-                      label: 'Currency',
+                      label: text.text('expenseForm.currency'),
                       value: _currency,
                       onChanged: saving
                           ? null
@@ -153,7 +159,11 @@ class _ExpenseFormState extends State<ExpenseForm> {
                     const SizedBox(height: 16),
                     OutlinedButton.icon(
                       icon: const Icon(Icons.calendar_today_outlined),
-                      label: Text('Date: ${formatUsDate(_date)}'),
+                      label: Text(
+                        text.text('expenseForm.date', {
+                          'date': text.date(_date),
+                        }),
+                      ),
                       onPressed: saving
                           ? null
                           : () async {
@@ -173,18 +183,22 @@ class _ExpenseFormState extends State<ExpenseForm> {
                       controller: _description,
                       enabled: !saving,
                       maxLength: 200,
-                      decoration: const InputDecoration(
-                        labelText: 'Description (optional)',
+                      decoration: InputDecoration(
+                        labelText: text.text('expenseForm.description'),
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Foreign amounts use the latest daily rate. The saved USD value stays fixed.',
-                    ),
+                    Text(text.text('expenseForm.rateHelp')),
                     if (widget.expense != null) ...[
                       const SizedBox(height: 12),
                       Text(
-                        'Saved: ${formatMinor(widget.expense!.amountUsdMinor, Currency.usd)} USD · rate date ${formatUsDate(widget.expense!.rateDate)}',
+                        text.text('expenseForm.savedRate', {
+                          'amount': formatMinor(
+                            widget.expense!.amountUsdMinor,
+                            Currency.usd,
+                          ),
+                          'date': text.date(widget.expense!.rateDate),
+                        }),
                       ),
                     ],
                     if (_error != null) ...[
@@ -192,7 +206,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
                       Semantics(
                         liveRegion: true,
                         child: Text(
-                          _error!,
+                          text.message(_error!),
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.error,
                           ),
@@ -210,7 +224,9 @@ class _ExpenseFormState extends State<ExpenseForm> {
                             )
                           : const Icon(Icons.check),
                       label: Text(
-                        saving ? 'Saving… connection required' : 'Save expense',
+                        text.text(
+                          saving ? 'expenseForm.saving' : 'expenseForm.save',
+                        ),
                       ),
                     ),
                   ],

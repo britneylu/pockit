@@ -1,11 +1,10 @@
 import 'package:material_ui/material_ui.dart';
 
-import '../core/date_format.dart';
-
 import '../core/category_style.dart';
 import '../core/money.dart';
 import '../models/currency.dart';
 import '../models/expense.dart';
+import '../l10n/app_localizations.dart';
 
 // show every matching purchase without changing the monthly summary totals
 class MonthlyExpenseList extends StatelessWidget {
@@ -24,6 +23,8 @@ class MonthlyExpenseList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final text = context.l10n;
+    final categoryLabel = category == null ? null : text.category(category!);
     return Card(
       color: embedded ? Colors.transparent : null,
       elevation: embedded ? 0 : null,
@@ -38,8 +39,10 @@ class MonthlyExpenseList extends StatelessWidget {
                 Expanded(
                   child: Text(
                     category == null
-                        ? 'This month’s expenses'
-                        : '$category expenses',
+                        ? text.text('monthly.title')
+                        : text.text('monthly.categoryTitle', {
+                            'category': categoryLabel!,
+                          }),
                     key: const Key('monthlyExpenseListTitle'),
                     style: theme.textTheme.titleLarge,
                   ),
@@ -47,7 +50,7 @@ class MonthlyExpenseList extends StatelessWidget {
                 if (category != null)
                   IconButton(
                     onPressed: onClear,
-                    tooltip: 'Clear category filter',
+                    tooltip: text.text('monthly.clearFilter'),
                     icon: const Icon(Icons.filter_alt_off_outlined),
                   ),
               ],
@@ -64,8 +67,10 @@ class MonthlyExpenseList extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 16),
                 child: Text(
                   category == null
-                      ? 'No expenses this month.'
-                      : 'No $category expenses this month.',
+                      ? text.text('monthly.empty')
+                      : text.text('monthly.emptyCategory', {
+                          'category': categoryLabel!,
+                        }),
                 ),
               ),
             for (final expense in expenses)
@@ -84,7 +89,7 @@ class MonthlyExpenseList extends StatelessWidget {
                       children: [
                         Text(
                           expense.description.isEmpty
-                              ? expense.category
+                              ? text.category(expense.category)
                               : expense.description,
                           style: theme.textTheme.titleSmall,
                         ),
@@ -103,7 +108,7 @@ class MonthlyExpenseList extends StatelessWidget {
                       runSpacing: 4,
                       children: [
                         Text(
-                          '${expense.category} · ${formatUsDate(expense.date)}',
+                          '${text.category(expense.category)} · ${text.date(expense.date)}',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: CategoryStyle.color(expense.category),
                           ),

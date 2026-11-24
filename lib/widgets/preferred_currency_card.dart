@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../viewmodels/budget_viewmodel.dart';
+import '../l10n/app_localizations.dart';
 import 'currency_dropdown.dart';
 
 // choose the currency preselected on new expense forms
@@ -13,6 +14,7 @@ class PreferredCurrencyCard extends StatelessWidget {
     final model = context.watch<BudgetViewModel>();
     final state = model.state;
     final theme = Theme.of(context);
+    final text = context.l10n;
     // disable changes until the current preference is ready
     final disabled =
         state.currencyLoading ||
@@ -25,17 +27,20 @@ class PreferredCurrencyCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Default currency', style: theme.textTheme.titleLarge),
+            Text(
+              text.text('settings.defaultCurrency'),
+              style: theme.textTheme.titleLarge,
+            ),
             const SizedBox(height: 12),
             if (state.currencyLoading)
-              const LinearProgressIndicator(
-                semanticsLabel: 'Loading preferred currency',
+              LinearProgressIndicator(
+                semanticsLabel: text.text('settings.loadingCurrency'),
               )
             else if (state.currencyLoadError != null) ...[
-              Text(state.currencyLoadError!),
+              Text(text.message(state.currencyLoadError!)),
               TextButton(
                 onPressed: model.reload,
-                child: const Text('Retry loading currency'),
+                child: Text(text.text('settings.retryCurrencyLoad')),
               ),
             ] else
               // save the preference as soon as a currency is selected
@@ -43,15 +48,15 @@ class PreferredCurrencyCard extends StatelessWidget {
                 fieldKey: ValueKey(
                   'preferredCurrency-${state.preferredCurrency.code}',
                 ),
-                label: 'New expenses',
+                label: text.text('settings.newExpenses'),
                 value: state.preferredCurrency,
                 onChanged: disabled ? null : model.savePreferredCurrency,
               ),
             if (state.currencySaving)
-              const Padding(
-                padding: EdgeInsets.only(top: 8),
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
                 child: LinearProgressIndicator(
-                  semanticsLabel: 'Saving preferred currency',
+                  semanticsLabel: text.text('settings.savingCurrency'),
                 ),
               ),
             if (state.currencySaveError != null) ...[
@@ -60,7 +65,7 @@ class PreferredCurrencyCard extends StatelessWidget {
                 child: Semantics(
                   liveRegion: true,
                   child: Text(
-                    state.currencySaveError!,
+                    text.message(state.currencySaveError!),
                     style: TextStyle(color: theme.colorScheme.error),
                   ),
                 ),
@@ -71,7 +76,7 @@ class PreferredCurrencyCard extends StatelessWidget {
                   onPressed: state.currencySaving
                       ? null
                       : model.retryPreferredCurrency,
-                  child: const Text('Retry saving currency'),
+                  child: Text(text.text('settings.retryCurrencySave')),
                 ),
               ),
             ],

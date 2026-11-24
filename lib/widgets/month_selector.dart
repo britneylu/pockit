@@ -3,21 +3,7 @@ import 'dart:math' as math;
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
-// keep month labels consistent across both screens
-const _monthNames = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
+import '../l10n/app_localizations.dart';
 
 // switch months with arrows or a direct month and year picker
 class MonthSelector extends StatelessWidget {
@@ -50,13 +36,15 @@ class MonthSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final text = context.l10n;
+    final monthLabel = text.month(month);
     return Column(
       children: [
         Row(
           children: [
             IconButton(
               onPressed: onPrevious,
-              tooltip: 'Previous month',
+              tooltip: text.text('previousMonth'),
               icon: const Icon(Icons.chevron_left),
             ),
             Expanded(
@@ -64,10 +52,9 @@ class MonthSelector extends StatelessWidget {
               child: Semantics(
                 button: true,
                 liveRegion: true,
-                label:
-                    '${_monthNames[month.month - 1]} ${month.year}, choose month and year',
+                label: '$monthLabel, ${text.text('chooseMonthYear')}',
                 child: Tooltip(
-                  message: 'Choose month and year',
+                  message: text.text('chooseMonthYear'),
                   child: InkWell(
                     onTap: () => _chooseMonth(context),
                     borderRadius: BorderRadius.circular(12),
@@ -79,7 +66,7 @@ class MonthSelector extends StatelessWidget {
                         children: [
                           Flexible(
                             child: Text(
-                              '${_monthNames[month.month - 1]} ${month.year}',
+                              monthLabel,
                               key: monthKey,
                               textAlign: TextAlign.center,
                               style: theme.textTheme.titleLarge,
@@ -96,12 +83,12 @@ class MonthSelector extends StatelessWidget {
             ),
             IconButton(
               onPressed: onNext,
-              tooltip: 'Next month',
+              tooltip: text.text('nextMonth'),
               icon: const Icon(Icons.chevron_right),
             ),
           ],
         ),
-        TextButton(onPressed: onCurrent, child: const Text('This month')),
+        TextButton(onPressed: onCurrent, child: Text(text.text('thisMonth'))),
       ],
     );
   }
@@ -150,17 +137,28 @@ class _MonthYearDialogState extends State<_MonthYearDialog> {
   @override
   Widget build(BuildContext context) {
     final years = [for (var year = _firstYear; year <= _lastYear; year++) year];
+    final text = context.l10n;
+    final monthNames = [
+      for (var month = 1; month <= 12; month++)
+        text.isChinese
+            ? '$month月'
+            : text.month(DateTime(2000, month)).split(' ').first,
+    ];
     return AlertDialog(
-      title: const Text('Choose month and year'),
+      title: Text(text.text('chooseMonthYear')),
       content: SizedBox(
         width: 320,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Row(
+            Row(
               children: [
-                Expanded(child: Text('Month', textAlign: TextAlign.center)),
-                Expanded(child: Text('Year', textAlign: TextAlign.center)),
+                Expanded(
+                  child: Text(text.text('month'), textAlign: TextAlign.center),
+                ),
+                Expanded(
+                  child: Text(text.text('year'), textAlign: TextAlign.center),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -176,7 +174,7 @@ class _MonthYearDialogState extends State<_MonthYearDialog> {
                       useMagnifier: true,
                       magnification: 1.08,
                       onSelectedItemChanged: (index) => _month = index + 1,
-                      children: _monthNames
+                      children: monthNames
                           .map((month) => Center(child: Text(month)))
                           .toList(),
                     ),
@@ -202,12 +200,12 @@ class _MonthYearDialogState extends State<_MonthYearDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(text.text('cancel')),
         ),
         FilledButton(
           // return both wheel selections to the screen
           onPressed: () => Navigator.pop(context, DateTime(_year, _month)),
-          child: const Text('Done'),
+          child: Text(text.text('done')),
         ),
       ],
     );

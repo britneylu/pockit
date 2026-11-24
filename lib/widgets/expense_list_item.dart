@@ -2,8 +2,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
 
 import '../core/category_style.dart';
-import '../core/date_format.dart';
 import '../core/money.dart';
+import '../l10n/app_localizations.dart';
 import '../models/currency.dart';
 import '../models/expense.dart';
 
@@ -23,8 +23,10 @@ class ExpenseListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final text = context.l10n;
+    final categoryLabel = text.category(expense.category);
     final title = expense.description.isEmpty
-        ? expense.category
+        ? categoryLabel
         : expense.description;
     final details = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,7 +42,7 @@ class ExpenseListItem extends StatelessWidget {
         if (expense.description.isNotEmpty) ...[
           const SizedBox(height: 3),
           Text(
-            expense.category,
+            categoryLabel,
             style: theme.textTheme.bodySmall?.copyWith(
               color: colors.onSurfaceVariant,
             ),
@@ -63,7 +65,7 @@ class ExpenseListItem extends StatelessWidget {
         if (expense.currency != Currency.usd)
           Tooltip(
             message:
-                '1 ${expense.currency.code} = ${expense.exchangeRate} USD\nRate date: ${formatUsDate(expense.rateDate)}',
+                '1 ${expense.currency.code} = ${expense.exchangeRate} USD\n${text.text('expenses.rateDate', {'date': text.date(expense.rateDate)})}',
             child: Text(
               '≈ ${formatMinor(expense.amountUsdMinor, Currency.usd)} USD',
               textAlign: TextAlign.right,
@@ -78,7 +80,10 @@ class ExpenseListItem extends StatelessWidget {
       button: onTap != null,
       customSemanticsActions: onDelete == null
           ? null
-          : {const CustomSemanticsAction(label: 'Delete expense'): onDelete!},
+          : {
+              CustomSemanticsAction(label: text.text('expenses.deleteTitle')):
+                  onDelete!,
+            },
       child: Material(
         color: Colors.transparent,
         child: InkWell(

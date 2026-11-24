@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../core/money.dart';
+import '../l10n/app_localizations.dart';
 import '../models/currency.dart';
 import '../viewmodels/dashboard_viewmodel.dart';
 import '../widgets/budget_progress.dart';
@@ -27,12 +28,13 @@ class HomeScreen extends StatelessWidget {
     final model = context.watch<DashboardViewModel>();
     final state = model.state;
     final theme = Theme.of(context);
+    final text = context.l10n;
     final remaining = state.remainingMinor;
     final budgetDetails = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Monthly budget',
+          text.text('home.monthlyBudget'),
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -51,7 +53,7 @@ class HomeScreen extends StatelessWidget {
             ),
             IconButton(
               onPressed: onSettings,
-              tooltip: 'Edit budget',
+              tooltip: text.text('home.editBudget'),
               padding: const EdgeInsets.all(8),
               constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
               icon: const Icon(Icons.edit_outlined, size: 18),
@@ -63,12 +65,9 @@ class HomeScreen extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        Text(
-          'Your money, wherever you go.',
-          style: theme.textTheme.headlineMedium,
-        ),
+        Text(text.text('home.title'), style: theme.textTheme.headlineMedium),
         const SizedBox(height: 8),
-        const Text('A little clarity for the month ahead.'),
+        Text(text.text('home.subtitle')),
         const SizedBox(height: 24),
         MonthSelector(
           month: state.month,
@@ -91,13 +90,20 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        'Spent this month',
+                        text.text('home.spent'),
                         style: theme.textTheme.titleMedium,
                       ),
                     ),
                     if (!state.expensesLoading && state.expensesError == null)
                       Text(
-                        '${state.expenseCount} ${state.expenseCount == 1 ? 'expense' : 'expenses'}',
+                        text.text('home.expenseCount', {
+                          'count': state.expenseCount,
+                          'label': text.text(
+                            state.expenseCount == 1
+                                ? 'home.expense'
+                                : 'home.expenses',
+                          ),
+                        }),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -106,16 +112,16 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 if (state.expensesLoading)
-                  const LinearProgressIndicator(
-                    semanticsLabel: 'Loading monthly spending',
+                  LinearProgressIndicator(
+                    semanticsLabel: text.text('home.loadingSpending'),
                   )
                 else if (state.expensesError != null) ...[
-                  const Text('Couldn’t load monthly spending.'),
+                  Text(text.text('home.spendingError')),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton(
                       onPressed: model.retryExpenses,
-                      child: const Text('Retry spending'),
+                      child: Text(text.text('home.retrySpending')),
                     ),
                   ),
                 ] else ...[
@@ -133,7 +139,7 @@ class HomeScreen extends StatelessWidget {
                   if (state.expenseCount == 0) ...[
                     const SizedBox(height: 8),
                     Text(
-                      'No expenses this month',
+                      text.text('home.noExpenses'),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -142,16 +148,16 @@ class HomeScreen extends StatelessWidget {
                 ],
                 const Divider(height: 28),
                 if (state.budgetLoading)
-                  const LinearProgressIndicator(
-                    semanticsLabel: 'Loading monthly budget',
+                  LinearProgressIndicator(
+                    semanticsLabel: text.text('home.loadingBudget'),
                   )
                 else if (state.budgetError != null) ...[
-                  const Text('Couldn’t load your budget.'),
+                  Text(text.text('home.budgetError')),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton(
                       onPressed: model.retryBudget,
-                      child: const Text('Retry budget'),
+                      child: Text(text.text('home.retryBudget')),
                     ),
                   ),
                 ] else if (state.budgetMinor == null)
@@ -160,10 +166,10 @@ class HomeScreen extends StatelessWidget {
                     spacing: 12,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      const Text('No monthly budget'),
+                      Text(text.text('home.noBudget')),
                       TextButton(
                         onPressed: onSettings,
-                        child: const Text('Set budget'),
+                        child: Text(text.text('home.setBudget')),
                       ),
                     ],
                   )
@@ -183,7 +189,13 @@ class HomeScreen extends StatelessWidget {
                       runSpacing: 4,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Text(remaining < 0 ? 'Over budget by' : 'Remaining'),
+                        Text(
+                          text.text(
+                            remaining < 0
+                                ? 'home.overBudget'
+                                : 'home.remaining',
+                          ),
+                        ),
                         Semantics(
                           liveRegion: true,
                           child: Text(
@@ -200,9 +212,7 @@ class HomeScreen extends StatelessWidget {
                       ],
                     )
                   else
-                    const Text(
-                      'Remaining balance unavailable while spending loads.',
-                    ),
+                    Text(text.text('home.remainingUnavailable')),
                 ],
               ],
             ),
@@ -217,21 +227,24 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Spending by category', style: theme.textTheme.titleLarge),
+                Text(
+                  text.text('home.categories'),
+                  style: theme.textTheme.titleLarge,
+                ),
                 const SizedBox(height: 8),
-                const Text('Share of this month’s USD spending'),
+                Text(text.text('home.categorySubtitle')),
                 const SizedBox(height: 12),
                 if (state.expensesLoading)
-                  const LinearProgressIndicator(
-                    semanticsLabel: 'Loading category spending',
+                  LinearProgressIndicator(
+                    semanticsLabel: text.text('home.loadingCategories'),
                   )
                 else if (state.expensesError != null) ...[
-                  const Text('Couldn’t load category spending.'),
+                  Text(text.text('home.categoryError')),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton(
                       onPressed: model.retryExpenses,
-                      child: const Text('Retry categories'),
+                      child: Text(text.text('home.retryCategories')),
                     ),
                   ),
                 ] else
@@ -271,7 +284,7 @@ class HomeScreen extends StatelessWidget {
                 shape: shape,
               ),
               icon: const Icon(Icons.receipt_long_outlined, size: 20),
-              label: const Text('View expenses'),
+              label: Text(text.text('home.viewExpenses')),
             );
             final converter = OutlinedButton.icon(
               onPressed: onConvert,
@@ -284,7 +297,7 @@ class HomeScreen extends StatelessWidget {
                 shape: shape,
               ),
               icon: const Icon(Icons.currency_exchange, size: 20),
-              label: const Text('Converter'),
+              label: Text(text.text('home.converter')),
             );
             if (stacked) {
               return Column(

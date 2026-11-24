@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../core/date_format.dart';
 import '../core/money.dart';
+import '../l10n/app_localizations.dart';
 import '../models/expense.dart';
 import '../viewmodels/expenses_viewmodel.dart';
 import '../viewmodels/budget_viewmodel.dart';
@@ -18,21 +19,22 @@ class ExpensesScreen extends StatelessWidget {
   // confirm deletion and offer an undo action after success
   Future<void> _delete(BuildContext context, Expense expense) async {
     final model = context.read<ExpensesViewModel>();
+    final text = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete expense?'),
+        title: Text(text.text('expenses.deleteTitle')),
         content: Text(
           '${formatMinor(expense.amountMinor, expense.currency)} ${expense.currency.code} · ${expense.category}',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(text.text('cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(text.text('delete')),
           ),
         ],
       ),
@@ -45,17 +47,17 @@ class ExpensesScreen extends StatelessWidget {
     messenger.showSnackBar(
       SnackBar(
         content: Text(
-          success ? 'Expense deleted' : 'Couldn’t delete. Please retry.',
+          text.text(success ? 'expenses.deleted' : 'expenses.deleteError'),
         ),
         action: success
             ? SnackBarAction(
-                label: 'Undo',
+                label: text.text('expenses.undo'),
                 onPressed: () async {
                   final restored = await model.restore(expense);
                   if (!restored) {
                     messenger.showSnackBar(
-                      const SnackBar(
-                        content: Text('Couldn’t restore. Please retry.'),
+                      SnackBar(
+                        content: Text(text.text('expenses.restoreError')),
                       ),
                     );
                   }
@@ -76,15 +78,21 @@ class ExpensesScreen extends StatelessWidget {
         .customCategories;
     // read the current expense list and loading status
     final state = model.state;
+    final text = context.l10n;
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        Text(
-          'Every purchase, in perspective.',
-          style: Theme.of(context).textTheme.headlineMedium,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            text.text('expenses.title'),
+            maxLines: 1,
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
         ),
         const SizedBox(height: 8),
-        const Text('Original currency. One clear USD total.'),
+        Text(text.text('expenses.subtitle')),
         const SizedBox(height: 24),
         MonthSelector(
           month: state.month,
@@ -113,20 +121,20 @@ class ExpensesScreen extends StatelessWidget {
         if (state.loading)
           const LinearProgressIndicator()
         else if (state.error != null) ...[
-          Text(state.error!),
+          Text(text.message(state.error!)),
           TextButton(
             onPressed: model.load,
-            child: const Text('Retry loading expenses'),
+            child: Text(text.text('expenses.retryLoad')),
           ),
         ] else if (state.visible.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 32),
             child: Text(
               state.expenses.isEmpty
-                  ? 'No expenses yet. Add your first purchase to get started.'
+                  ? text.text('expenses.empty')
                   : state.monthly.isEmpty
-                  ? 'No expenses in this month.'
-                  : 'No expenses in this category.',
+                  ? text.text('expenses.emptyMonth')
+                  : text.text('expenses.emptyCategory'),
             ),
           )
         else
@@ -136,7 +144,7 @@ class ExpensesScreen extends StatelessWidget {
               child: Semantics(
                 header: true,
                 child: Text(
-                  formatUsDate(group.date),
+                  text.date(group.date),
                   key: ValueKey('expenseDate-${formatUsDate(group.date)}'),
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,

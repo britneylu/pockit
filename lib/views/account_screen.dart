@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../viewmodels/budget_viewmodel.dart';
 import '../viewmodels/expenses_viewmodel.dart';
@@ -29,8 +30,9 @@ class AccountScreen extends StatelessWidget {
         budget.currencySaveError != null ||
         budget.transferError != null;
     final theme = Theme.of(context);
+    final text = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Account')),
+      appBar: AppBar(title: Text(text.text('account.title'))),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -77,15 +79,22 @@ class AccountScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   saving
-                                      ? 'Syncing changes'
+                                      ? text.text('account.syncing')
                                       : syncIssue
-                                      ? 'Sync needs attention'
-                                      : 'Cloud sync on',
+                                      ? text.text('account.syncIssue')
+                                      : text.text('account.syncOn'),
                                   style: theme.textTheme.titleSmall,
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  '${expenses.expenses.length} ${expenses.expenses.length == 1 ? 'expense' : 'expenses'} saved',
+                                  text.text('account.savedCount', {
+                                    'count': expenses.expenses.length,
+                                    'label': text.text(
+                                      expenses.expenses.length == 1
+                                          ? 'home.expense'
+                                          : 'home.expenses',
+                                    ),
+                                  }),
                                   style: theme.textTheme.bodySmall,
                                 ),
                               ],
@@ -102,7 +111,7 @@ class AccountScreen extends StatelessWidget {
                     child: Semantics(
                       liveRegion: true,
                       child: Text(
-                        auth.state.error!,
+                        text.message(auth.state.error!),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -113,7 +122,13 @@ class AccountScreen extends StatelessWidget {
                       ? null
                       : () => _confirmSignOut(context, auth, saving),
                   icon: const Icon(Icons.logout),
-                  label: Text(auth.state.busy ? 'Signing out…' : 'Sign out'),
+                  label: Text(
+                    text.text(
+                      auth.state.busy
+                          ? 'account.signingOut'
+                          : 'account.signOut',
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -129,23 +144,24 @@ class AccountScreen extends StatelessWidget {
     AuthViewModel auth,
     bool saving,
   ) async {
+    final text = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Sign out?'),
+        title: Text(text.text('account.signOutTitle')),
         content: Text(
           saving
-              ? 'Your changes are still syncing. Sign out anyway?'
-              : 'Sign out of this account?',
+              ? text.text('account.signOutSyncing')
+              : text.text('account.signOutQuestion'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(text.text('cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Sign out'),
+            child: Text(text.text('account.signOut')),
           ),
         ],
       ),
