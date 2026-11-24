@@ -50,9 +50,9 @@ class _CustomCategoriesCardState extends State<CustomCategoriesCard> {
         state.categorySaving ||
         state.categoryLoadError != null;
     return Card(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -60,9 +60,7 @@ class _CustomCategoriesCardState extends State<CustomCategoriesCard> {
               text.text('settings.customCategories'),
               style: theme.textTheme.titleLarge,
             ),
-            const SizedBox(height: 8),
-            Text(text.text('settings.categoryLimit')),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             if (state.categoryLoading)
               LinearProgressIndicator(
                 semanticsLabel: text.text('settings.loadingCategories'),
@@ -82,6 +80,7 @@ class _CustomCategoriesCardState extends State<CustomCategoriesCard> {
                 textCapitalization: TextCapitalization.words,
                 decoration: InputDecoration(
                   labelText: text.text('settings.categoryName'),
+                  counterText: '',
                   suffixIcon: IconButton(
                     onPressed: disabled ? null : _add,
                     tooltip: text.text('settings.addCategory'),
@@ -90,9 +89,8 @@ class _CustomCategoriesCardState extends State<CustomCategoriesCard> {
                 ),
                 onSubmitted: disabled ? null : (_) => _add(),
               ),
-              if (state.customCategories.isEmpty)
-                Text(text.text('settings.noCustomCategories'))
-              else
+              if (state.customCategories.isNotEmpty) ...[
+                const SizedBox(height: 10),
                 // show saved categories as removable chips
                 Wrap(
                   spacing: 8,
@@ -116,6 +114,7 @@ class _CustomCategoriesCardState extends State<CustomCategoriesCard> {
                       ),
                   ],
                 ),
+              ],
             ],
             if (state.categorySaving)
               Padding(

@@ -18,17 +18,19 @@ class SettingsScreen extends StatelessWidget {
     // explain guest storage without requiring an account
     if (auth.state.account == null) {
       return ListView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
         children: [
           Text(
             text.text('settings.title'),
             style: Theme.of(context).textTheme.headlineMedium,
           ),
-          const SizedBox(height: 16),
-          Text(text.text('settings.guest')),
           const SizedBox(height: 8),
-          Text(text.text('settings.guestNote')),
-          const SizedBox(height: 24),
+          Text(text.text('settings.subtitle')),
+          const SizedBox(height: 8),
+          Text(
+            '${text.text('settings.guest')} · ${text.text('settings.guestNote')}',
+          ),
+          const SizedBox(height: 16),
           const BudgetSettingsCard(guest: true),
           // keep guest preferences in memory only
           const PreferredCurrencyCard(),
@@ -37,20 +39,21 @@ class SettingsScreen extends StatelessWidget {
       );
     }
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
       children: [
         Text(
           text.text('settings.title'),
           style: Theme.of(context).textTheme.headlineMedium,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 8),
+        Text(text.text('settings.subtitle')),
+        const SizedBox(height: 16),
         const BudgetSettingsCard(guest: false),
         // save signed in preferences to firestore
         const PreferredCurrencyCard(),
         // custom categories are available only for signed in accounts
         const CustomCategoriesCard(),
         const LanguageSettingsCard(),
-        Text(text.text('settings.tagline')),
       ],
     );
   }

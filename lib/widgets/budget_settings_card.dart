@@ -67,21 +67,33 @@ class _BudgetSettingsCardState extends State<BudgetSettingsCard> {
         state.loadError != null ||
         state.transferError != null;
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 20),
+      margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Form(
           key: _form,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                text.text('settings.budget'),
-                style: theme.textTheme.titleLarge,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 12,
+                runSpacing: 4,
+                children: [
+                  Text(
+                    text.text('settings.budget'),
+                    style: theme.textTheme.titleLarge,
+                  ),
+                  Text(
+                    state.amountMinor == null
+                        ? text.text('settings.noBudget')
+                        : '${formatMinor(state.amountMinor!, Currency.usd)} USD',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(text.text('settings.budgetHelp')),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               if (state.loading)
                 LinearProgressIndicator(
                   semanticsLabel: text.text('settings.loadingBudget'),
@@ -93,17 +105,6 @@ class _BudgetSettingsCardState extends State<BudgetSettingsCard> {
                   child: Text(text.text('settings.retryBudgetLoad')),
                 ),
               ] else ...[
-                Text(
-                  state.amountMinor == null
-                      ? text.text('settings.noBudget')
-                      : text.text('settings.currentBudget', {
-                          'amount': formatMinor(
-                            state.amountMinor!,
-                            Currency.usd,
-                          ),
-                        }),
-                ),
-                const SizedBox(height: 16),
                 TextFormField(
                   key: const Key('monthlyBudget'),
                   controller: _amount,
@@ -127,7 +128,7 @@ class _BudgetSettingsCardState extends State<BudgetSettingsCard> {
                     }
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 FilledButton.icon(
                   onPressed: disabled ? null : _save,
                   icon: const Icon(Icons.savings_outlined),
@@ -177,14 +178,6 @@ class _BudgetSettingsCardState extends State<BudgetSettingsCard> {
                     child: Text(text.message(state.message!)),
                   ),
                 ),
-              // only guests need an extra storage reminder
-              if (widget.guest) ...[
-                const SizedBox(height: 12),
-                Text(
-                  'Transfers when you sign in unless the account already has a budget.',
-                  style: theme.textTheme.bodySmall,
-                ),
-              ],
             ],
           ),
         ),

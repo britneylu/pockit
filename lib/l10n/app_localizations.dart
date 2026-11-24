@@ -111,6 +111,7 @@ class AppLocalizations {
     'monthly.empty': 'No expenses this month.',
     'monthly.emptyCategory': 'No {category} expenses this month.',
     'settings.title': 'Make room for your goals.',
+    'settings.subtitle': 'Set your budget and preferences.',
     'settings.guest': 'Guest mode',
     'settings.guestNote':
         'Guest expenses are temporary and transfer when you sign in.',
@@ -286,6 +287,7 @@ class AppLocalizations {
     'monthly.empty': '本月暂无支出',
     'monthly.emptyCategory': '本月暂无{category}支出',
     'settings.title': '为你的目标留出空间',
+    'settings.subtitle': '设置预算和偏好',
     'settings.guest': '访客模式',
     'settings.guestNote': '访客支出仅临时保存，登录后会转移到账户',
     'settings.tagline': 'Pockit · 无论去哪里，都能掌握每一笔钱',

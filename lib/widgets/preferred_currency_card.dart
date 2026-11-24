@@ -21,9 +21,9 @@ class PreferredCurrencyCard extends StatelessWidget {
         state.currencySaving ||
         state.currencyLoadError != null;
     return Card(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -31,7 +31,7 @@ class PreferredCurrencyCard extends StatelessWidget {
               text.text('settings.defaultCurrency'),
               style: theme.textTheme.titleLarge,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             if (state.currencyLoading)
               LinearProgressIndicator(
                 semanticsLabel: text.text('settings.loadingCurrency'),

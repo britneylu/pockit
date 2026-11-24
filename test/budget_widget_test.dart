@@ -53,7 +53,7 @@ void main() {
     await tester.tap(find.text('Save budget'));
     await tester.pumpAndSettle();
     expect(find.text('Budget set for this session'), findsOneWidget);
-    expect(find.text('Current budget: 1200.50 USD'), findsOneWidget);
+    expect(find.text('1200.50 USD'), findsOneWidget);
   });
   testWidgets('account budget loads into the field and saves changes', (
     tester,
